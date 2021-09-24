@@ -118,16 +118,16 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
     }
 
     pub fun getNft(address:Address) : [NftData] {
-        var artData: [NftData] = []
+        var nftData: [NftData] = []
         let account = getAccount(address)
 
-        if let artCollection = account.getCapability(self.CollectionPublicPath).borrow<&{MatrixWorldVoucher.MatrixWorldVoucherCollectionPublic}>()  {
-            for id in artCollection.getIDs() {
-                var art = artCollection.borrowVoucher(id: id)
-                artData.append(NftData(metadata: art!.metadata,id: id))
+        if let nftCollection = account.getCapability(self.CollectionPublicPath).borrow<&{MatrixWorldVoucher.MatrixWorldVoucherCollectionPublic}>()  {
+            for id in nftCollection.getIDs() {
+                var nft = nftCollection.borrowVoucher(id: id)
+                nftData.append(NftData(metadata: nft!.metadata,id: id))
             }
         }
-        return artData
+        return nftData
     }
 
 	pub resource NFTMinter {
