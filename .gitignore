@@ -2,3 +2,6 @@
 packages/contracts/pages/TESTNET_TEST_POC.md
 packages/contracts/sh/deploy-to-testnet.sh
 packages/contracts/flow.testnet.json
+packages/sdk/java/voucher-sdk/.classpath
+packages/sdk/java/voucher-sdk/.project
+packages/sdk/java/voucher-sdk/target
