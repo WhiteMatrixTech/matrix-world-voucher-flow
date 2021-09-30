@@ -34,27 +34,36 @@ import com.nftco.flow.sdk.crypto.PrivateKey;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.util.encoders.Hex;
 
+import matrix.flow.sdk.model.VoucherMetadataModel;
+
 public final class VoucherClient {
 
     private final FlowAccessApi accessAPI;
-    private final String accountAddress;
+    private final FlowAddress accountAddress;
     private final PrivateKey privateKey;
     private final String fusdAddress;
     private final String fungibleTokenAddress;
+    private final String nonFungibleTokenAddress;
+    private final String voucherAddress;
 
     static final int DAYS_IN_WEEK = 7;
     static final String FUNGIBLE_TOKEN_ADDRESS_TEMP = "%FUNGIBLE_TOKEN_ADDRESS";
     static final String FUSD_ADDRESS_TEMP = "%FUSD_ADDRESS";
+    static final String NON_FUNGIBLE_TOKEN_ADDRESS_TEMP = "%NON_FUNGIBLE_TOKEN_ADDRESS";
+    static final String VOUCHER_ADDRESS = "%VOUCHER_ADDRESS";
 
     public VoucherClient(String host, int port, String privateKeyHex, String accountAddress, String fusdAddress,
-            String fungibleTokenAddress) {
+            String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress) {
         this.accessAPI = Flow.newAccessApi(host, port);
         this.privateKey = Crypto.decodePrivateKey(privateKeyHex);
-        this.accountAddress = accountAddress;
+        this.accountAddress = new FlowAddress(accountAddress);
         this.fusdAddress = fusdAddress;
         this.fungibleTokenAddress = fungibleTokenAddress;
+        this.nonFungibleTokenAddress = nonFungibleTokenAddress;
+        this.voucherAddress = voucherAddress;
     }
 
+    // ============================ Voucher Related Functions
     public FlowId transferFUSD(FlowAddress senderAddress, FlowAddress recipientAddress, BigDecimal amount)
             throws Exception {
         if (amount.scale() != 8) {
@@ -80,7 +89,40 @@ public final class VoucherClient {
         return txID;
     }
 
-    public void VerifyFUSDTransaction(String payerAddress, BigDecimal amount, String transactionId) throws Exception {
+    public void mintVoucher(String recipientAddressString, String landInfoHashString) throws Exception {
+
+        // Setup cadence script
+        FlowAddress recipientAddress = new FlowAddress(recipientAddressString);
+        FlowAccountKey senderAccountKey = this.getAccountKey(this.accountAddress, 0);
+        String cadenceScript = readScript("mint_voucher.cdc.temp");
+        cadenceScript = cadenceScript.replaceAll(VoucherClient.NON_FUNGIBLE_TOKEN_ADDRESS_TEMP,
+                this.nonFungibleTokenAddress);
+        cadenceScript = cadenceScript.replaceAll(VoucherClient.VOUCHER_ADDRESS, this.voucherAddress);
+
+        // NFT metadata
+        VoucherMetadataModel metadata = VoucherMetadataModel.builder().hash(landInfoHashString).build();
+
+        // Build flow transaction
+        FlowTransaction tx = new FlowTransaction(new FlowScript(cadenceScript.getBytes()),
+                Arrays.asList(new FlowArgument(new AddressField(recipientAddress.getBase16Value())),
+                        new FlowArgument(new StringField(metadata.getName())),
+                        new FlowArgument(new StringField(metadata.getDescription())),
+                        new FlowArgument(new StringField(metadata.getAnimationUrl())),
+                        new FlowArgument(new StringField(metadata.getHash())),
+                        new FlowArgument(new StringField(metadata.getType()))),
+                this.getLatestBlockID(), 100L,
+                new FlowTransactionProposalKey(this.accountAddress, senderAccountKey.getId(),
+                        senderAccountKey.getSequenceNumber()),
+                this.accountAddress, Arrays.asList(this.accountAddress), new ArrayList<>(), new ArrayList<>());
+
+        Signer signer = Crypto.getSigner(this.privateKey, senderAccountKey.getHashAlgo());
+        tx = tx.addEnvelopeSignature(this.accountAddress, senderAccountKey.getId(), signer);
+
+        FlowId txID = this.accessAPI.sendTransaction(tx);
+        this.waitForSeal(txID);
+    }
+
+    public void verifyFUSDTransaction(String payerAddress, BigDecimal amount, String transactionId) throws Exception {
         FlowTransactionResult txResult = this.waitForSeal((new FlowId(transactionId)));
 
         if (amount.scale() != 8) {
@@ -116,11 +158,12 @@ public final class VoucherClient {
         }
 
         AddressField to = (AddressField) secondEvent.getField("to").getValue();
-        if (!to.getValue().toString().substring(2).equals(this.accountAddress)) {
+        if (!to.getValue().toString().substring(2).equals(this.accountAddress.getBase16Value())) {
             throw new Exception("Deposited to wrong address");
         }
     }
 
+    // ============================ Flow Util Functions
     public FlowAddress createAccount(FlowAddress payerAddress, String publicKeyHex) {
         FlowAccountKey payerAccountKey = this.getAccountKey(payerAddress, 0);
         FlowAccountKey newAccountPublicKey = new FlowAccountKey(0, new FlowPublicKey(publicKeyHex),
