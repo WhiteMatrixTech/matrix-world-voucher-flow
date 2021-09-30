@@ -1,0 +1,17 @@
+import NonFungibleToken from 0x%NON_FUNGIBLE_TOKEN_ADDRESS
+import MatrixWorldVoucher from 0x%VOUCHER_ADDRESS
+transaction(recipient: Address, name: String, description: String, animationUrl: String, hash: String, type: String) {
+    let minter: &MatrixWorldVoucher.NFTMinter
+    prepare(signer: AuthAccount) {
+        self.minter = signer.borrow<&MatrixWorldVoucher.NFTMinter>(from: MatrixWorldVoucher.MinterStoragePath)
+            ?? panic("Could not borrow a reference to the NFT minter")
+    }
+    execute {
+        let recipient = getAccount(recipient)
+        let receiver = recipient
+            .getCapability(MatrixWorldVoucher.CollectionPublicPath)!
+            .borrow<&{NonFungibleToken.CollectionPublic}>()
+            ?? panic("Could not get receiver reference to the NFT Collection")
+        self.minter.mintNFT(recipient: receiver, name: name, description: description, animationUrl: animationUrl, hash: hash, type: type)
+    }
+}

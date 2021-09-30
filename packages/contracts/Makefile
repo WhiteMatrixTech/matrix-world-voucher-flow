@@ -17,3 +17,8 @@ mint-nft:
 list-nfts:
 	cd go && go run list_nfts/main.go
 .PHONY: list-nfts
+
+setup-fusd:
+	bash ./sh/setup-fusd.sh
+.PHONY: setup-fusd
+

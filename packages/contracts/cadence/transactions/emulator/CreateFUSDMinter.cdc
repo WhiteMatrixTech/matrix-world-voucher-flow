@@ -1,4 +1,3 @@
-
 import FUSD from "../../contracts/lib/FUSD.cdc"
 
 transaction {
