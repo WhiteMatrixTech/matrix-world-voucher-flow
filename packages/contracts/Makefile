@@ -22,3 +22,6 @@ setup-fusd:
 	bash ./sh/setup-fusd.sh
 .PHONY: setup-fusd
 
+setup-multiple-proposal-keys:
+	cd go && go run add_proposal_keys/main.go
+

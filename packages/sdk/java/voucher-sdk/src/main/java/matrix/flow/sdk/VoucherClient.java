@@ -41,10 +41,12 @@ public final class VoucherClient {
     private final FlowAccessApi accessAPI;
     private final FlowAddress accountAddress;
     private final PrivateKey privateKey;
+    private final int keyIndex;
     private final String fusdAddress;
     private final String fungibleTokenAddress;
     private final String nonFungibleTokenAddress;
     private final String voucherAddress;
+    private final int waitForSealTries;
 
     static final int DAYS_IN_WEEK = 7;
     static final String FUNGIBLE_TOKEN_ADDRESS_TEMP = "%FUNGIBLE_TOKEN_ADDRESS";
@@ -52,15 +54,18 @@ public final class VoucherClient {
     static final String NON_FUNGIBLE_TOKEN_ADDRESS_TEMP = "%NON_FUNGIBLE_TOKEN_ADDRESS";
     static final String VOUCHER_ADDRESS = "%VOUCHER_ADDRESS";
 
-    public VoucherClient(String host, int port, String privateKeyHex, String accountAddress, String fusdAddress,
-            String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress) {
+    public VoucherClient(String host, int port, String privateKeyHex, int keyIndex, String accountAddress, String fusdAddress,
+            String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress, int waitForSealTries) {
+        // TODO: Build a config model
         this.accessAPI = Flow.newAccessApi(host, port);
         this.privateKey = Crypto.decodePrivateKey(privateKeyHex);
+        this.keyIndex = keyIndex;
         this.accountAddress = new FlowAddress(accountAddress);
         this.fusdAddress = fusdAddress;
         this.fungibleTokenAddress = fungibleTokenAddress;
         this.nonFungibleTokenAddress = nonFungibleTokenAddress;
         this.voucherAddress = voucherAddress;
+        this.waitForSealTries = waitForSealTries;
     }
 
     // ============================ Voucher Related Functions
@@ -69,7 +74,7 @@ public final class VoucherClient {
         if (amount.scale() != 8) {
             throw new Exception("FUSD amount must have exactly 8 decimal places of precision (e.g. 10.00000000)");
         }
-        FlowAccountKey senderAccountKey = this.getAccountKey(senderAddress, 0);
+        FlowAccountKey senderAccountKey = this.getAccountKey(senderAddress, this.keyIndex);
         String cadenceScript = readScript("transfer_fusd.cdc.temp");
         cadenceScript = cadenceScript.replaceAll(VoucherClient.FUNGIBLE_TOKEN_ADDRESS_TEMP, this.fungibleTokenAddress);
         cadenceScript = cadenceScript.replaceAll(VoucherClient.FUSD_ADDRESS_TEMP, this.fusdAddress);
@@ -93,7 +98,7 @@ public final class VoucherClient {
 
         // Setup cadence script
         FlowAddress recipientAddress = new FlowAddress(recipientAddressString);
-        FlowAccountKey senderAccountKey = this.getAccountKey(this.accountAddress, 0);
+        FlowAccountKey senderAccountKey = this.getAccountKey(this.accountAddress, this.keyIndex);
         String cadenceScript = readScript("mint_voucher.cdc.temp");
         cadenceScript = cadenceScript.replaceAll(VoucherClient.NON_FUNGIBLE_TOKEN_ADDRESS_TEMP,
                 this.nonFungibleTokenAddress);
@@ -235,19 +240,22 @@ public final class VoucherClient {
 
     private FlowTransactionResult waitForSeal(FlowId txID) {
         FlowTransactionResult txResult;
+        int countDown = this.waitForSealTries;
 
-        while (true) {
+        while (countDown>0) {
             txResult = this.getTransactionResult(txID);
+            countDown--;
             if (txResult.getStatus().equals(FlowTransactionStatus.SEALED)) {
                 return txResult;
             }
 
             try {
                 Thread.sleep(1000L);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        throw new RuntimeException("Timed out waiting for sealed transaction");
     }
 
     private FlowAddress getAccountCreatedAddress(FlowTransactionResult txResult) {
