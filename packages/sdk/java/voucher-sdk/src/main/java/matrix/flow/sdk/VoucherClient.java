@@ -240,19 +240,22 @@ public final class VoucherClient {
 
     private FlowTransactionResult waitForSeal(FlowId txID) {
         FlowTransactionResult txResult;
+        int countDown = this.waitForSealTries;
 
-        while (true) {
+        while (countDown>0) {
             txResult = this.getTransactionResult(txID);
+            countDown--;
             if (txResult.getStatus().equals(FlowTransactionStatus.SEALED)) {
                 return txResult;
             }
 
             try {
                 Thread.sleep(1000L);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        throw new RuntimeException("Timed out waiting for sealed transaction");
     }
 
     private FlowAddress getAccountCreatedAddress(FlowTransactionResult txResult) {

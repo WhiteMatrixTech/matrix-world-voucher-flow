@@ -124,7 +124,7 @@ public class AppTest {
         adminClient.verifyFUSDTransaction(serviceAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value());
 
         // Mint Voucher if verification is success
-        adminClient.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH");
+        adminClient.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH_TEST_VERIFY");
     }
 
     /**
@@ -147,11 +147,12 @@ public class AppTest {
         final GenericObjectPool<VoucherClient> objectPool = new GenericObjectPool<>(voucherClientPoolFactory,
                 objectPoolConfig);
         for (int i = 0; i < simTransactionCount; ++i) {
+            final int idx = i;
             executorService.execute(new Thread(() -> {
                 VoucherClient client = null;
                 try {
                     client = objectPool.borrowObject();
-                    client.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH");
+                    client.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH_POOL" + idx);
                 } catch (final Exception e) {
                     e.printStackTrace();
                 } finally {

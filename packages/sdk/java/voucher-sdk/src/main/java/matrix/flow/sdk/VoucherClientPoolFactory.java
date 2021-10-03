@@ -33,7 +33,6 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
     }
 
     public VoucherClient create() {
-        System.out.println("Creating VoucherClient: " + atomicInteger.get());
         return new VoucherClient(host, port, privateKeyHex, atomicInteger.getAndIncrement(), accountAddress,
                 fusdAddress, fungibleTokenAddress, nonFungibleTokenAddress, voucherAddress, waitForSealTries);
     }
@@ -44,7 +43,6 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
 
     @Override
     public void destroyObject(PooledObject<VoucherClient> client) throws Exception {
-        System.out.println("Destroying VoucherClient: " + atomicInteger.get());
         super.destroyObject(client);
         atomicInteger.getAndDecrement();
     }
