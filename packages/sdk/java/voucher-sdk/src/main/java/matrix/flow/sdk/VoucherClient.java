@@ -46,6 +46,7 @@ public final class VoucherClient {
     private final String fungibleTokenAddress;
     private final String nonFungibleTokenAddress;
     private final String voucherAddress;
+    private final int waitForSealTries;
 
     static final int DAYS_IN_WEEK = 7;
     static final String FUNGIBLE_TOKEN_ADDRESS_TEMP = "%FUNGIBLE_TOKEN_ADDRESS";
@@ -54,7 +55,8 @@ public final class VoucherClient {
     static final String VOUCHER_ADDRESS = "%VOUCHER_ADDRESS";
 
     public VoucherClient(String host, int port, String privateKeyHex, int keyIndex, String accountAddress, String fusdAddress,
-            String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress) {
+            String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress, int waitForSealTries) {
+        // TODO: Build a config model
         this.accessAPI = Flow.newAccessApi(host, port);
         this.privateKey = Crypto.decodePrivateKey(privateKeyHex);
         this.keyIndex = keyIndex;
@@ -63,6 +65,7 @@ public final class VoucherClient {
         this.fungibleTokenAddress = fungibleTokenAddress;
         this.nonFungibleTokenAddress = nonFungibleTokenAddress;
         this.voucherAddress = voucherAddress;
+        this.waitForSealTries = waitForSealTries;
     }
 
     // ============================ Voucher Related Functions

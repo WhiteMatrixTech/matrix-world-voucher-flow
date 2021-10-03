@@ -6,7 +6,7 @@ import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-public final class VoucherClientPoolFactory extends BasePooledObjectFactory<VoucherClient>{
+public final class VoucherClientPoolFactory extends BasePooledObjectFactory<VoucherClient> {
     private AtomicInteger atomicInteger = new AtomicInteger();
 
     private final String host;
@@ -17,20 +17,25 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
     private final String fungibleTokenAddress;
     private final String nonFungibleTokenAddress;
     private final String voucherAddress;
+    private final int waitForSealTries;
 
-    public VoucherClientPoolFactory(String host, int port, String accountAddress, String privateKeyHex, String fusdAddress, String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress) {
+    public VoucherClientPoolFactory(String host, int port, String privateKeyHex, String accountAddress,
+            String fusdAddress, String fungibleTokenAddress, String nonFungibleTokenAddress, String voucherAddress, int waitForSealTries) {
         this.host = host;
         this.port = port;
-        this.accountAddress = accountAddress;
         this.privateKeyHex = privateKeyHex;
+        this.accountAddress = accountAddress;
         this.fusdAddress = fusdAddress;
         this.fungibleTokenAddress = fungibleTokenAddress;
         this.nonFungibleTokenAddress = nonFungibleTokenAddress;
         this.voucherAddress = voucherAddress;
+        this.waitForSealTries = waitForSealTries;
     }
 
     public VoucherClient create() {
-        return new VoucherClient(host, port, privateKeyHex, atomicInteger.getAndIncrement(), accountAddress, fusdAddress, fungibleTokenAddress, nonFungibleTokenAddress, voucherAddress);
+        System.out.println("Creating VoucherClient: " + atomicInteger.get());
+        return new VoucherClient(host, port, privateKeyHex, atomicInteger.getAndIncrement(), accountAddress,
+                fusdAddress, fungibleTokenAddress, nonFungibleTokenAddress, voucherAddress, waitForSealTries);
     }
 
     public PooledObject<VoucherClient> wrap(VoucherClient client) {
@@ -39,8 +44,9 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
 
     @Override
     public void destroyObject(PooledObject<VoucherClient> client) throws Exception {
-        atomicInteger.getAndDecrement();
+        System.out.println("Destroying VoucherClient: " + atomicInteger.get());
         super.destroyObject(client);
+        atomicInteger.getAndDecrement();
     }
 
     @Override
