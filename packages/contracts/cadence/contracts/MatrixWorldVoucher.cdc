@@ -11,7 +11,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
     pub let MinterStoragePath: StoragePath
 
     pub var totalSupply: UInt64
-    pub var nftHashs: {String: Bool}
+    priv var nftHashes: {String: Bool}
 
     pub resource interface NFTPublic {
         pub let id: UInt64
@@ -39,7 +39,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
         pub let metadata: Metadata
         init(initID: UInt64,metadata: Metadata) {
             self.id = initID
-            self.metadata=metadata
+            self.metadata = metadata
         }
     }
 
@@ -140,7 +140,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
             hash: String,
             type: String) {
             emit Minted(id: MatrixWorldVoucher.totalSupply, name: name, description: description, animationUrl: animationUrl, hash: hash, type: type)
-            assert(!MatrixWorldVoucher.nftHashs.containsKey(hash), message: "Duplicate voucher hash")
+            assert(!MatrixWorldVoucher.nftHashes.containsKey(hash), message: "Duplicate voucher hash")
 			recipient.deposit(token: <-create MatrixWorldVoucher.NFT(
 			    initID: MatrixWorldVoucher.totalSupply,
 			    metadata: Metadata(
@@ -152,7 +152,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
                 )))
 
             MatrixWorldVoucher.totalSupply = MatrixWorldVoucher.totalSupply + (1 as UInt64)
-            MatrixWorldVoucher.nftHashs[hash] = true;
+            MatrixWorldVoucher.nftHashes[hash] = true;
 		}
 	}
 
@@ -162,7 +162,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
         self.MinterStoragePath = /storage/MatrixWorldVoucherMinter
 
         self.totalSupply = 0
-        self.nftHashs = {}
+        self.nftHashes = {}
 
         let minter <- create NFTMinter()
         self.account.save(<-minter, to: self.MinterStoragePath)
