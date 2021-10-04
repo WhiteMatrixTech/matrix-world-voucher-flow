@@ -13,6 +13,10 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
     pub var totalSupply: UInt64
     priv var nftHashes: {String: Bool}
 
+    pub fun isHashExists(hash: String): Bool {
+        return self.nftHashes[hash] ?? false
+    }
+
     pub resource interface NFTPublic {
         pub let id: UInt64
         pub let metadata: Metadata
