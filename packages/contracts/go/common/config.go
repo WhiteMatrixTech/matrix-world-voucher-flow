@@ -14,6 +14,7 @@ type FlowConfig struct {
 	SingerPriv    string
 	ContractName  string
 	ContractAddress string
+	FUSD_ADDRESS string
 }
 
 var (
@@ -27,5 +28,6 @@ var (
 		SingerPriv:              os.Getenv("SIGNER_PRIV"),
 		ContractName:            os.Getenv("CONTRACT_NAME"),
 		ContractAddress:         os.Getenv("CONTRACT_ADDRESS"),
+		FUSD_ADDRESS:            os.Getenv("FUSD_ADDRESS"),
 	}
 )

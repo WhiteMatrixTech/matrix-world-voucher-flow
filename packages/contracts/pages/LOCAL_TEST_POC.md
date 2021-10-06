@@ -18,6 +18,7 @@ export NONFUNTOKEN_ADDRESS=f8d6e0586b0a20c7
 export FLOWTOKEN_ADDRESS=0ae53cb6e3f42a79
 export CONTRACT_NAME=MatrixWorldVoucher
 export CONTRACT_ADDRESS=01cf0e2f2f715450
+export FUSD_ADDRESS=f8d6e0586b0a20c7
 ```
 
 ## Mainnet Env
