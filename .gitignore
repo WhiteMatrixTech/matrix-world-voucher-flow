@@ -5,3 +5,7 @@ packages/contracts/flow.testnet.json
 packages/sdk/java/voucher-sdk/.classpath
 packages/sdk/java/voucher-sdk/.project
 packages/sdk/java/voucher-sdk/target
+***/node_modules
+***/dist
+
+packages/sdk/js/tsconfig.tsbuildinfo

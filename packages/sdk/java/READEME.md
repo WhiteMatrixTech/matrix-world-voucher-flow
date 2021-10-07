@@ -11,7 +11,7 @@
 public void verifyFUSDTransaction(String payerAddress, BigDecimal amount, String transactionId) throws Exception;
 
 // mintVoucher
-public void mintVoucher(String recipientAddressString, String landInfoHashString) throws Exception;
+public VoucherMetadataModel mintVoucher(String recipientAddressString, String landInfoHashString) throws Exception;
 
 ```
 

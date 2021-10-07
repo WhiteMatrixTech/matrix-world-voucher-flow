@@ -6,7 +6,8 @@
   "private": true,
   "workspaces": [
     "packages/contracts",
-    "packages/sdk"
+    "packages/sdk/js",
+    "packages/sdk/demo-js-front"
   ],
   "scripts": {
     "build": "yarn workspaces run build",
