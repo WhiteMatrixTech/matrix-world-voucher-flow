@@ -11,7 +11,7 @@ import lombok.Builder.Default;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VoucherMetadataModel {
-    private String id;
+    private int id;
 
     @Default
     private String name="MatrixWorldVoucher";

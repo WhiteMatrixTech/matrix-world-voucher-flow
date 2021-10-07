@@ -24,4 +24,9 @@ setup-fusd:
 
 setup-multiple-proposal-keys:
 	cd go && go run add_proposal_keys/main.go
+.PHONY: setup-multiple-proposal-keys
+
+bootstrap-local:
+	bash ./sh/bootstrop.sh
+.PHONY: bootstrap-local
 

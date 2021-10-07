@@ -68,9 +68,26 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
     export CONTRACT_ADDRESS=01cf0e2f2f715450
     export FUSD_ADDRESS=f8d6e0586b0a20c7
 
-    make list-nfts
+    make list-nfts 
     ```
-8. Simulate a FUSD transfer to Voucher Admin account (01cf0e2f2f715450)
+
+8. Setup multiple proposal keys for sending mint transaction concurrently - admin account(01cf0e2f2f715450)
+
+    ```bash
+    export SIGNER_PRIV=a996c6d610d93faf82ad5b15407b66d3a2b72a284b5c2fd4097b5a3e735a79e1
+    export SIGNER_ADDRESS=01cf0e2f2f715450
+    export NODE="127.0.0.1:3569"
+    export FUNTOKEN_ADDRESS=ee82856bf20e2aa6
+    export NONFUNTOKEN_ADDRESS=f8d6e0586b0a20c7
+    export FLOWTOKEN_ADDRESS=0ae53cb6e3f42a79
+    export CONTRACT_NAME=MatrixWorldVoucher
+    export CONTRACT_ADDRESS=01cf0e2f2f715450
+    export FUSD_ADDRESS=f8d6e0586b0a20c7
+
+    make setup-multiple-proposal-keys
+    ```
+
+9. Simulate a FUSD transfer to Voucher Admin account (01cf0e2f2f715450)
 
     ```bash
     export SIGNER_PRIV=2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111
@@ -89,3 +106,6 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
     You will see txID on both emulator and go running log output
 
 Keep the emulator running and setup SDK to connect to local access node, as well as keep all contract and admin information matching the LOCAL env.
+
+#### !! Step 4,5,6,8 can be simply applied by running bootstrap script
+`make bootstrap-local`

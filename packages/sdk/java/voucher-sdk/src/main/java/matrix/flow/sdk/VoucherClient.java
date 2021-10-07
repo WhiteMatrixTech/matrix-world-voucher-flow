@@ -28,6 +28,7 @@ import com.nftco.flow.sdk.Signer;
 import com.nftco.flow.sdk.cadence.AddressField;
 import com.nftco.flow.sdk.cadence.StringField;
 import com.nftco.flow.sdk.cadence.UFix64NumberField;
+import com.nftco.flow.sdk.cadence.UInt64NumberField;
 import com.nftco.flow.sdk.crypto.Crypto;
 import com.nftco.flow.sdk.crypto.PrivateKey;
 
@@ -94,7 +95,7 @@ public final class VoucherClient {
         return txID;
     }
 
-    public void mintVoucher(String recipientAddressString, String landInfoHashString) throws Exception {
+    public VoucherMetadataModel mintVoucher(String recipientAddressString, String landInfoHashString) throws Exception {
 
         // Setup cadence script
         FlowAddress recipientAddress = new FlowAddress(recipientAddressString);
@@ -124,7 +125,30 @@ public final class VoucherClient {
         tx = tx.addEnvelopeSignature(this.accountAddress, senderAccountKey.getId(), signer);
 
         FlowId txID = this.accessAPI.sendTransaction(tx);
-        this.waitForSeal(txID);
+        FlowTransactionResult result = this.waitForSeal(txID);
+        if (result.getStatus() != FlowTransactionStatus.SEALED) {
+            throw new Exception("There is something wrong with the transaction");
+        }
+
+        VoucherMetadataModel mintedToken = new VoucherMetadataModel();
+        for (FlowEvent event: result.getEvents()) {
+            if (event.getType().contains(this.voucherAddress+".MatrixWorldVoucher.Minted")){
+                UInt64NumberField id = (UInt64NumberField) event.getField("id");
+                mintedToken.setId(id.toInt());
+                StringField name = (StringField) event.getField("name");
+                mintedToken.setName(name.getValue().toString());
+                StringField description = (StringField) event.getField("description");
+                mintedToken.setDescription(description.getValue().toString());
+                StringField animationUrl = (StringField) event.getField("animationUrl");
+                mintedToken.setAnimationUrl(animationUrl.getValue().toString());
+                StringField hash = (StringField) event.getField("hash");
+                mintedToken.setHash(hash.getValue().toString());
+                StringField type = (StringField) event.getField("type");
+                mintedToken.setType(type.getValue().toString());
+            }
+            break;
+        }
+        return mintedToken;
     }
 
     public void verifyFUSDTransaction(String payerAddress, BigDecimal amount, String transactionId) throws Exception {

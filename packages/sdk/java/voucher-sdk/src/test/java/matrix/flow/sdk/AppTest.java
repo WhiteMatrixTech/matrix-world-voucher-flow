@@ -5,11 +5,14 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import com.nftco.flow.sdk.FlowAddress;
 import com.nftco.flow.sdk.FlowId;
@@ -21,6 +24,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import io.grpc.netty.shaded.io.netty.util.concurrent.Future;
+import matrix.flow.sdk.model.VoucherMetadataModel;
 
 /**
  * Unit test for simple App.
@@ -64,7 +68,7 @@ public class AppTest {
                 testAdminAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
-        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 9,
+        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 0,
                 serviceAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
@@ -89,7 +93,7 @@ public class AppTest {
                 testAdminAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
-        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 9,
+        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 0,
                 serviceAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
@@ -112,7 +116,7 @@ public class AppTest {
                 testAdminAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
-        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 9,
+        final VoucherClient serviceClient = new VoucherClient("localhost", 3569, SERVICE_PRIVATE_KEY_HEX, 0,
                 serviceAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
                 NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
 
@@ -124,7 +128,11 @@ public class AppTest {
         adminClient.verifyFUSDTransaction(serviceAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value());
 
         // Mint Voucher if verification is success
-        adminClient.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH_TEST_VERIFY");
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        String testHash = "TEST_HASH_TEST_VERIFY" + timeStamp;
+        VoucherMetadataModel newToken = adminClient.mintVoucher(serviceAccountAddress.getBase16Value(), testHash);
+        assert(newToken.getHash().equals(testHash));
+        System.out.println(newToken.toString());
     }
 
     /**
@@ -152,7 +160,8 @@ public class AppTest {
                 VoucherClient client = null;
                 try {
                     client = objectPool.borrowObject();
-                    client.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH_POOL" + idx);
+                    String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+                    client.mintVoucher(serviceAccountAddress.getBase16Value(), "TEST_HASH_POOL" + idx + timeStamp);
                 } catch (final Exception e) {
                     e.printStackTrace();
                 } finally {
