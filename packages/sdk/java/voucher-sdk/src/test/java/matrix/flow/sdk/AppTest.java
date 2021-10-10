@@ -131,7 +131,7 @@ public class AppTest {
         String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
         String testHash = "TEST_HASH_TEST_VERIFY" + timeStamp;
         VoucherMetadataModel newToken = adminClient.mintVoucher(serviceAccountAddress.getBase16Value(), testHash);
-        assert(newToken.getHash().equals(testHash));
+        assert (newToken.getHash().equals(testHash));
         System.out.println(newToken.toString());
     }
 
@@ -175,5 +175,25 @@ public class AppTest {
         updateLatch.await();
         executorService.shutdown();
         objectPool.close();
+    }
+
+    @Test
+    public void jvmSdkSignatureVerificationShouldWork() throws Exception {
+        final KeyPair keyPair = Crypto.generateKeyPair(SignatureAlgorithm.ECDSA_P256);
+        final PublicKey publicKey = Crypto.decodePublicKey(keyPair.getPublic().getHex());
+        final PrivateKey privateKey = Crypto.decodePrivateKey(keyPair.getPrivate().getHex());
+
+        final Signer signer = Crypto.getSigner(privateKey, HashAlgorithm.SHA3_256);
+        final byte[] signature = signer.signAsUser("TEST".getBytes());
+
+        final VoucherClient adminClient = new VoucherClient("localhost", 3569, TEST_ADMIN_PRIVATE_KEY_HEX, 9,
+                testAdminAccountAddress.getBase16Value(), FUSD_ADDRESS, FUNGIBLE_TOKEN_ADDRESS,
+                NON_FUNGIBLE_TOKEN_ADDRESS, VOUCHER_ADDRESS, 20);
+
+        System.out.println(Hex.encodeHexString("TEST".getBytes()));
+        System.out.println(Hex.encodeHexString((signature)));
+        System.out.println(publicKey.getHex());
+        adminClient.verifySignature(Hex.encodeHexString("TEST".getBytes()), new String[] { publicKey.getHex() },
+                new double[] { 1.0 }, new int[] { 2 }, new String[] { Hex.encodeHexString(signature) });
     }
 }

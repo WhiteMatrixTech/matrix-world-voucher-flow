@@ -19,9 +19,9 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 ### JAVA SDK
 
-`cd ./packages/sdk/java/voucher-sdk`
+`./packages/sdk/java/voucher-sdk`
 
-### Sample steps (Local Emulator):
+#### Sample steps (Local Emulator):
 1. Setup Flow CLI [(Above)](#setup-flow-cli)
 2. Got to contracts directory, where a **flow.json** is located
     
@@ -109,3 +109,63 @@ Keep the emulator running and setup SDK to connect to local access node, as well
 
 #### !! Step 4,5,6,8 can be simply applied by running bootstrap script
 `make bootstrap-local`
+
+### JS SDK
+
+`/packages/sdk/js`
+
+#### Sample steps (Local Emulator):
+1. Setup Flow CLI [(Above)](#setup-flow-cli)
+2. Got to contracts directory, where a **flow.json** is located
+    
+    `cd ./packages/contracts/`
+
+3. Open a new terminal and start emulator
+
+    `flow emulator start`
+
+4. Run bootstrap script 
+
+    `make bootstrap-local`
+
+5. Start dev-wallet docker (Account information here is default service account in Local Emulator)
+
+    ```bash
+    docker run -it \
+        -e PORT=8701 \
+        -e FLOW_ACCESS_NODE=http://localhost:8080 \
+        -e FLOW_ACCOUNT_KEY_ID=0 \
+        -e FLOW_ACCOUNT_PRIVATE_KEY=2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111 \
+        -e FLOW_ACCOUNT_PUBLIC_KEY=31a053a2003d95760d8fff623aeedcc927022d8e0767972ab507608a5f611636e81857c6c46b048be6f66eddc13f5553627861153f6ce301caf5a056d68efc29 \
+        -e FLOW_INIT_ACCOUNTS=0 \
+        -e FLOW_ACCOUNT_ADDRESS=0xf8d6e0586b0a20c7 \
+        -e FLOW_AVATAR_URL=https://avatars.onflow.org/avatar/ \
+        --network host \
+        -p 8701:8701 \
+        ghcr.io/onflow/fcl-dev-wallet:latest 
+    ```
+
+6. Import FCL from SDK and setup with Local Emulator, and Local Wallet provider information
+
+    ```typescript
+    import { fcl, FclVoucherClient } from "matrix-world-voucher-flow-js-sdk/dist";
+    await fcl
+      .config()
+      // Point App at Emulator
+      .put("accessNode.api", "http://localhost:8080")
+      // Point FCL at dev-wallet (default port)
+      .put("discovery.wallet", "http://localhost:8701/fcl/authn")
+      .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
+      .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7");
+    await fcl.logIn();
+    await fcl.authenticate();
+    ```
+
+    sample code for sending FUSD
+    ```typescript
+    import { fcl, FclVoucherClient } from "matrix-world-voucher-flow-js-sdk/dist";
+    // transferFUSD
+    const client = new FclVoucherClient();
+    const ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
+    console.log(ret);
+    ```
