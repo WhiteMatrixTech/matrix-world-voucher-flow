@@ -1,6 +1,4 @@
 {
-  "cSpell.words": [
-    "FUSD"
-  ],
-  "java.jdt.ls.vmargs": "-javaagent:/usr/local/share/java/lombok.jar -Xbootclasspath/a:/usr/local/share/java/lombok.jar"
+  "cSpell.words": ["FUSD"],
+  "java.jdt.ls.vmargs": "-javaagent:/usr/local/share/java/lombok.jar"
 }
