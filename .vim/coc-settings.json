@@ -1,4 +1,5 @@
 {
   "cSpell.words": ["FUSD"],
-  "java.jdt.ls.vmargs": "-javaagent:/usr/local/share/java/lombok.jar"
+  "java.jdt.ls.vmargs": "-javaagent:/usr/local/share/java/lombok.jar",
+  "java.format.settings.url": "../packages/sdk/java/voucher-sdk/formatter/coc-java-google-style.xml"
 }
