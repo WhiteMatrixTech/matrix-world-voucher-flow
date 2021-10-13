@@ -31,19 +31,4 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
         super.destroyObject(client);
         atomicInteger.getAndDecrement();
     }
-
-    @Override
-    public boolean validateObject(final PooledObject<VoucherClient> client) {
-        return super.validateObject(client);
-    }
-
-    @Override
-    public void activateObject(final PooledObject<VoucherClient> client) throws Exception {
-        super.activateObject(client);
-    }
-
-    @Override
-    public void passivateObject(final PooledObject<VoucherClient> client) throws Exception {
-        super.passivateObject(client);
-    }
 }

@@ -27,6 +27,7 @@ import com.nftco.flow.sdk.cadence.UInt64NumberField;
 import org.apache.commons.io.IOUtils;
 
 import lombok.extern.log4j.Log4j2;
+import matrix.flow.sdk.model.FlowClientException;
 
 @Log4j2
 public class FlowSimpleClient {
@@ -62,11 +63,11 @@ public class FlowSimpleClient {
             final int[] signAlgos, final int[] hashAlogs, final String[] signatures) {
 
         final FlowScript script = new FlowScript(readScript("verify_sig_script.cdc.temp").getBytes());
-        final List<StringField> publicKeyHexC = new ArrayList<StringField>();
-        final List<UFix64NumberField> weightsC = new ArrayList<UFix64NumberField>();
-        final List<UInt64NumberField> signAlgosC = new ArrayList<UInt64NumberField>();
-        final List<UInt64NumberField> hashAlogsC = new ArrayList<UInt64NumberField>();
-        final List<StringField> signaturesC = new ArrayList<StringField>();
+        final List<StringField> publicKeyHexC = new ArrayList<>();
+        final List<UFix64NumberField> weightsC = new ArrayList<>();
+        final List<UInt64NumberField> signAlgosC = new ArrayList<>();
+        final List<UInt64NumberField> hashAlogsC = new ArrayList<>();
+        final List<StringField> signaturesC = new ArrayList<>();
 
         for (int i = 0; i < publicKeysHex.length; ++i) {
             publicKeyHexC.add(new StringField(publicKeysHex[i]));
@@ -89,8 +90,7 @@ public class FlowSimpleClient {
     }
 
     public FlowAccount getAccount(final FlowAddress address) {
-        final FlowAccount ret = this.accessAPI.getAccountAtLatestBlock(address);
-        return ret;
+        return this.accessAPI.getAccountAtLatestBlock(address);
     }
 
     public BigDecimal getAccountBalance(final FlowAddress address) {
@@ -108,8 +108,7 @@ public class FlowSimpleClient {
     }
 
     private FlowTransactionResult getTransactionResult(final FlowId txID) {
-        final FlowTransactionResult result = this.accessAPI.getTransactionResultById(txID);
-        return result;
+        return this.accessAPI.getTransactionResultById(txID);
     }
 
     protected FlowTransactionResult waitForSeal(final FlowId txID) {
@@ -126,10 +125,13 @@ public class FlowSimpleClient {
             try {
                 Thread.sleep(1000L);
             } catch (final Exception e) {
+                FlowSimpleClient.log.error("Interrupted with " + e.toString());
                 e.printStackTrace();
+                Thread.currentThread().interrupt();
+                throw new FlowClientException(e.toString());
             }
         }
-        throw new RuntimeException("Timed out waiting for sealed transaction");
+        throw new FlowClientException("Timed out waiting for sealed transaction");
     }
 
     private FlowAddress getAccountCreatedAddress(final FlowTransactionResult txResult) {
@@ -148,9 +150,8 @@ public class FlowSimpleClient {
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         } catch (final IOException e) {
             e.printStackTrace();
+            throw new FlowClientException(e.toString());
         }
-
-        return null;
     }
 
 }
