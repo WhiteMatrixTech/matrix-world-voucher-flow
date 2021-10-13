@@ -5,6 +5,7 @@ pub fun main(
   rawPublicKeys: [String],
   weights: [UFix64],
   signAlgos: [UInt64],
+  hashAlgos: [UInt64],
   signatures: [String],
 ): Bool {
   let keyList = Crypto.KeyList()
@@ -16,7 +17,7 @@ pub fun main(
         publicKey: rawPublicKey.decodeHex(),
         signatureAlgorithm: signAlgos[i] == 2 ? SignatureAlgorithm.ECDSA_P256 : SignatureAlgorithm.ECDSA_secp256k1 
       ),
-      hashAlgorithm: HashAlgorithm.SHA3_256,
+      hashAlgorithm: hashAlgos[i] == 2 ? HashAlgorithm.SHA2_256 : HashAlgorithm.SHA3_256,
       weight: weights[i],
     )
     i = i + 1
