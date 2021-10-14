@@ -1,6 +1,8 @@
+### Install
+`yarn add @white-matrix/matrix-world-voucher-flow-js-sdk`
+
 ### API reference
 core apis [VoucherClient](./src/client/VoucherClient.ts)
-
 You can also check [Demo-front-page]('../demo-js-front/src/App.tsx') for reference
 ```typescript
 /** Setup global FCL instance
