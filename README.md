@@ -131,7 +131,7 @@ Keep the emulator running and setup SDK to connect to local access node, as well
 5. Start dev-wallet docker (Account information here is default service account in Local Emulator)
 
     ```bash
-    docker run -it \
+ apis    docker run -it \
         -e PORT=8701 \
         -e FLOW_ACCESS_NODE=http://localhost:8080 \
         -e FLOW_ACCOUNT_KEY_ID=0 \
@@ -141,22 +141,15 @@ Keep the emulator running and setup SDK to connect to local access node, as well
         -e FLOW_ACCOUNT_ADDRESS=0xf8d6e0586b0a20c7 \
         -e FLOW_AVATAR_URL=https://avatars.onflow.org/avatar/ \
         --network host \
-        -p 8701:8701 \
         ghcr.io/onflow/fcl-dev-wallet:latest 
     ```
 
-6. Import FCL from SDK and setup with Local Emulator, and Local Wallet provider information
+6. Import FCL from SDK
 
     ```typescript
-    import { fcl, FclVoucherClient } from "matrix-world-voucher-flow-js-sdk/dist";
-    await fcl
-      .config()
-      // Point App at Emulator
-      .put("accessNode.api", "http://localhost:8080")
-      // Point FCL at dev-wallet (default port)
-      .put("discovery.wallet", "http://localhost:8701/fcl/authn")
-      .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
-      .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7");
+    import { fcl, FclVoucherClient, FLowEnv } from "matrix-world-voucher-flow-js-sdk/dist";
+    const client = new FclVoucherClient();
+    await client.setupGlobalFcl(FLowEnv.localEmulator);
     await fcl.logIn();
     await fcl.authenticate();
     ```
@@ -167,5 +160,14 @@ Keep the emulator running and setup SDK to connect to local access node, as well
     // transferFUSD
     const client = new FclVoucherClient();
     const ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
+    console.log(ret);
+    ```
+
+    sample code for getting FUSD balance
+    ```typescript
+    import { fcl, FclVoucherClient } from "matrix-world-voucher-flow-js-sdk/dist";
+    // transferFUSD
+    const client = new FclVoucherClient();
+    const ret = await client.FUSDBalance("0x01cf0e2f2f715450");
     console.log(ret);
     ```

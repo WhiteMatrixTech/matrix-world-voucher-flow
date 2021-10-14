@@ -1,18 +1,12 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import { fcl, FclVoucherClient } from "matrix-world-voucher-flow-js-sdk/dist";
+import { fcl, FclVoucherClient, FLowEnv } from "matrix-world-voucher-flow-js-sdk/dist";
 
 function App() {
+    const client = new FclVoucherClient();
   const check = async () => {
-    await fcl
-      .config()
-      // Point App at Emulator
-      .put("accessNode.api", "http://localhost:8080")
-      // Point FCL at dev-wallet (default port)
-      .put("discovery.wallet", "http://localhost:8701/fcl/authn")
-      .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
-      .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7");
+    await client.setupGlobalFcl(FLowEnv.localEmulator);
     await fcl.logIn();
     await fcl.authenticate();
   };
@@ -20,9 +14,16 @@ function App() {
 
   const transferFUSD = async () => {
     // transferFUSD
-    const client = new FclVoucherClient();
-    const ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
+    let ret;
+    ret = await client.FUSDBalance("0x01cf0e2f2f715450");
     console.log(ret);
+
+    ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
+    console.log(ret);
+
+    ret = await client.FUSDBalance("0x01cf0e2f2f715450");
+    console.log(ret);
+
   };
 
   return (
