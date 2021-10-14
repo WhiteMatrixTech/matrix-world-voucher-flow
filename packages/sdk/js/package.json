@@ -1,7 +1,7 @@
 {
-  "name": "matrix-world-voucher-flow-js-sdk",
+  "name": "@white-matrix/matrix-world-voucher-flow-js-sdk",
   "version": "0.1.0",
-  "main": "./dist/inex.js",
+  "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
     "build": "yarn build:clean && yarn tsc",
