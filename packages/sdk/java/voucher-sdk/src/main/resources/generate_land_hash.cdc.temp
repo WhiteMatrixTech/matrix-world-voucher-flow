@@ -1,0 +1,12 @@
+import Crypto
+    
+pub fun main(
+  topLeftX: UInt64,
+  topLeftY: UInt64,
+  height: UInt64,
+  width: UInt64,
+): String {
+  let message = topLeftX.toBigEndianBytes().concat(topLeftY.toBigEndianBytes()).concat(height.toBigEndianBytes()).concat(width.toBigEndianBytes())
+
+  return String.encodeHex(HashAlgorithm.SHA3_256.hash(message))
+}

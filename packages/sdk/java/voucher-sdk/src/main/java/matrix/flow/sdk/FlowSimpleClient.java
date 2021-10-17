@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Longs;
 import com.nftco.flow.sdk.Flow;
 import com.nftco.flow.sdk.FlowAccessApi;
 import com.nftco.flow.sdk.FlowAccount;
@@ -19,10 +21,12 @@ import com.nftco.flow.sdk.FlowScript;
 import com.nftco.flow.sdk.FlowScriptResponse;
 import com.nftco.flow.sdk.FlowTransactionResult;
 import com.nftco.flow.sdk.FlowTransactionStatus;
+import com.nftco.flow.sdk.HashAlgorithm;
 import com.nftco.flow.sdk.cadence.ArrayField;
 import com.nftco.flow.sdk.cadence.StringField;
 import com.nftco.flow.sdk.cadence.UFix64NumberField;
 import com.nftco.flow.sdk.cadence.UInt64NumberField;
+import com.nftco.flow.sdk.crypto.HasherImpl;
 
 import org.apache.commons.io.IOUtils;
 
@@ -34,6 +38,7 @@ public class FlowSimpleClient {
 
     protected final FlowAccessApi accessAPI;
     protected final int waitForSealTries;
+    protected final HasherImpl hasher;
 
     static final int DAYS_IN_WEEK = 7;
 
@@ -41,6 +46,7 @@ public class FlowSimpleClient {
 
         this.accessAPI = Flow.newAccessApi(host, port);
         this.waitForSealTries = waitForSealTries;
+        this.hasher = new HasherImpl(HashAlgorithm.SHA3_256);
     }
 
     /**
@@ -87,6 +93,30 @@ public class FlowSimpleClient {
         FlowSimpleClient.log.info("Signatures are verified with True result");
 
         return result.getJsonCadence().getValue().toString().equals("true");
+    }
+
+    public String generateLandInfoHash(final Integer topLeftX, final Integer topLeftY, final Integer height,
+            final Integer width) {
+        final byte[] topLeftXB = Longs.toByteArray(Integer.toUnsignedLong(topLeftX));
+        final byte[] topLeftYB = Longs.toByteArray(Integer.toUnsignedLong(topLeftY));
+        final byte[] heightB = Longs.toByteArray(Integer.toUnsignedLong(height));
+        final byte[] widthB = Longs.toByteArray(Integer.toUnsignedLong(width));
+
+        return hasher.hashAsHexString(Bytes.concat(topLeftXB, topLeftYB, heightB, widthB));
+    }
+
+    public String generateLandInfoHashCadence(final Integer topLeftX, final Integer topLeftY, final Integer height,
+            final Integer width) {
+
+        final FlowScript script = new FlowScript(readScript("generate_land_hash.cdc.temp").getBytes());
+
+        final FlowScriptResponse result = this.accessAPI.executeScriptAtLatestBlock(script,
+                Arrays.asList(new FlowArgument(new UInt64NumberField(topLeftX.toString())).getByteStringValue(),
+                        new FlowArgument(new UInt64NumberField(topLeftY.toString())).getByteStringValue(),
+                        new FlowArgument(new UInt64NumberField(height.toString())).getByteStringValue(),
+                        new FlowArgument(new UInt64NumberField(width.toString())).getByteStringValue()));
+
+        return result.getJsonCadence().getValue().toString();
     }
 
     public FlowAccount getAccount(final FlowAddress address) {
