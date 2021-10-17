@@ -20,6 +20,7 @@ import com.nftco.flow.sdk.crypto.PrivateKey;
 import com.nftco.flow.sdk.crypto.PublicKey;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.Rule;
@@ -157,7 +158,7 @@ public class AppTest {
         final GenericObjectPool<VoucherClient> objectPool = new GenericObjectPool<>(voucherClientPoolFactory,
                 objectPoolConfig);
 
-        // Start 
+        // Start
         for (int i = 0; i < simTransactionCount; ++i) {
             final int idx = i;
             executorService.execute(new Thread(() -> {
@@ -195,8 +196,9 @@ public class AppTest {
         System.out.println(Hex.encodeHexString("TEST".getBytes()));
         System.out.println(Hex.encodeHexString((signature)));
         System.out.println(publicKey.getHex());
-        final boolean verified = adminClient.verifyUserSignature(Hex.encodeHexString("TEST".getBytes()), new String[] { publicKey.getHex() },
-                new double[] { 1.0 }, new int[] { 2 }, new int[] { 3 }, new String[] { Hex.encodeHexString(signature) });
+        final boolean verified = adminClient.verifyUserSignature(Hex.encodeHexString("TEST".getBytes()),
+                new String[] { publicKey.getHex() }, new double[] { 1.0 }, new int[] { 2 }, new int[] { 3 },
+                new String[] { Hex.encodeHexString(signature) });
 
         assertTrue("Correct signature verification should return true", verified);
 
@@ -213,10 +215,24 @@ public class AppTest {
 
         final VoucherClient adminClient = new VoucherClient(adminClientConfig);
 
-        final boolean verified = adminClient.verifyUserSignature(Hex.encodeHexString("TEST2".getBytes()), new String[] { publicKey.getHex() },
-                new double[] { 1.0 }, new int[] { 2 }, new int[] { 3 }, new String[] { Hex.encodeHexString(signature) });
+        final boolean verified = adminClient.verifyUserSignature(Hex.encodeHexString("TEST2".getBytes()),
+                new String[] { publicKey.getHex() }, new double[] { 1.0 }, new int[] { 2 }, new int[] { 3 },
+                new String[] { Hex.encodeHexString(signature) });
 
         assertTrue("Incorrect signature verification should return false", !verified);
 
+    }
+
+    @Test
+    public void generateLandInfoHashEqualsCadenceVersion() throws Exception {
+
+        final VoucherClient adminClient = new VoucherClient(adminClientConfig);
+
+        final String hashAsHexString = adminClient.generateLandInfoHash(111, 1, 1, 1);
+        final String hashAsHexStringCadence = adminClient.generateLandInfoHashCadence(111, 1, 1, 1);
+        System.out.println(hashAsHexString);
+        System.out.println(hashAsHexStringCadence);
+        assertTrue("Java implementation of generateLandInfoHash should equals cadence version",
+                StringUtils.equals(hashAsHexStringCadence, hashAsHexString));
     }
 }
