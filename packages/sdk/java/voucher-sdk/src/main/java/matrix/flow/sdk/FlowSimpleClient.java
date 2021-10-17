@@ -95,6 +95,16 @@ public class FlowSimpleClient {
         return result.getJsonCadence().getValue().toString().equals("true");
     }
 
+    /**
+     * Generate cadence compatible LandInfoHashHexString
+     *
+     * @param topLeftX UInt64 topLeftX coordinate
+     * @param topLeftY UInt64 topLeftY coordinate
+     * @param height UInt64 height of square lands
+     * @param width  UInt64 width of square lands
+     *
+     * @return LandInfoHashHexString of a square of Lands
+     */
     public String generateLandInfoHash(final Integer topLeftX, final Integer topLeftY, final Integer height,
             final Integer width) {
         final byte[] topLeftXB = Longs.toByteArray(Integer.toUnsignedLong(topLeftX));
