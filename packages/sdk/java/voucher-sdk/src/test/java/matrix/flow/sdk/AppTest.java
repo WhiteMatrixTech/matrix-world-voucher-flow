@@ -4,7 +4,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -135,6 +137,45 @@ public class AppTest {
         VoucherMetadataModel newToken = adminClient.mintVoucher(userAccountAddress.getBase16Value(), testHash);
         assert (newToken.getHash().equals(testHash));
         System.out.println(newToken.toString());
+    }
+
+    /**
+     * Test verifyFUSDTransactionShouldMintVoucherToSender
+     *
+     * @throws Exception
+     */
+    @Test
+    public void batchMintVoucherShouldWorldProperly() throws Exception {
+        final VoucherClient adminClient = new VoucherClient(adminClientConfig);
+
+        final int simBatchSize = 50;
+        final List<VoucherMetadataModel> targetTokens = new ArrayList<>();
+        final List<String> recipientList = new ArrayList<>();
+        final List<String> landInfoHashStringList = new ArrayList<>();
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        String testHash = "TEST_HASH_TEST_VERIFY" + timeStamp;
+        for (int i = 0; i < simBatchSize; i++) {
+            recipientList.add(userAccountAddress.getBase16Value());
+            landInfoHashStringList.add(testHash + i);
+            final VoucherMetadataModel newToken = VoucherMetadataModel.builder().hash(testHash + i).build();
+            targetTokens.add(newToken);
+        }
+
+        // Mint Voucher if verification is success
+        final List<VoucherMetadataModel> newTokens = adminClient.batchMintVoucher(
+                recipientList.toArray(new String[recipientList.size()]),
+                landInfoHashStringList.toArray(new String[landInfoHashStringList.size()]));
+
+        assert (newTokens.size() == simBatchSize);
+        for (int i = 0; i < simBatchSize; i++) {
+            final VoucherMetadataModel target = targetTokens.get(i);
+            final VoucherMetadataModel mintToken = newTokens.get(i);
+            assert (target.getHash().equals(mintToken.getHash()));
+            assert (target.getAnimationUrl().equals(mintToken.getAnimationUrl()));
+            assert (target.getName().equals(mintToken.getName()));
+            assert (target.getType().equals(mintToken.getType()));
+            assert (target.getDescription().equals(mintToken.getDescription()));
+        }
     }
 
     /**

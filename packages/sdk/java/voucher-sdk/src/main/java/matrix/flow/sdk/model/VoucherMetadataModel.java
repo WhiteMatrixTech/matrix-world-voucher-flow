@@ -14,10 +14,10 @@ public class VoucherMetadataModel {
     private int id;
 
     @Default
-    private String name = "MatrixWorldVoucher";
+    private String name = "LandVoucher";
 
     @Default
-    private String description = "MatrixWorldVoucher for redeeming land";
+    private String description = "Matrix World Land Voucher";
 
     @Default
     private String animationUrl = "";
@@ -25,5 +25,5 @@ public class VoucherMetadataModel {
     private String hash;
 
     @Default
-    private String type = "1";
+    private String type = "Land Voucher";
 }
