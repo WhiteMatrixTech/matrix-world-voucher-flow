@@ -115,6 +115,16 @@ public final class VoucherClient extends FlowSimpleClient {
         return mintedToken;
     }
 
+    /**
+     * Mint a batch of Vouchers
+     *
+     * @param recipientAddressStringList list of recipient account address
+     * @param landInfoHashStringList list of landInfoHash
+     *
+     * @return a list of Minted token
+     *
+     * @throws FlowClientException runtime exception
+     */
     public List<VoucherMetadataModel> batchMintVoucher(final String[] recipientAddressStringList,
             final String[] landInfoHashStringList) throws FlowClientException {
 
