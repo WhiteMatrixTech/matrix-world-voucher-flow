@@ -40,7 +40,6 @@ verifyFUSDTransaction
 * @param transactionId flow transactionId
 *
 * @throws Exception with reason of unexpected error
-* @TODO: Custom RunTimeException  
 */
 public void verifyFUSDTransaction(final String payerAddress, final BigDecimal amount, final String transactionId) throws Exception
 ```
@@ -57,8 +56,22 @@ mintVoucher
 * @throws Exception unknown runtime error
 */
 public VoucherMetadataModel mintVoucher(final String recipientAddressString, final String landInfoHashString) throws Exception;
-
 ```
+batchMintVoucher
+```java
+/**
+* Mint a batch of Vouchers
+*
+* @param recipientAddressStringList list of recipient account address
+* @param landInfoHashStringList list of landInfoHash
+*
+* @return a list of Minted token
+*
+* @throws FlowClientException runtime exception
+*/
+public List<VoucherMetadataModel> batchMintVoucher(final String[] recipientAddressStringList, final String[] landInfoHashStringList) throws FlowClientException;
+```
+
 generateLandInfoHash
 ```java
 /**
@@ -75,7 +88,7 @@ public String generateLandInfoHash(final Integer topLeftX, final Integer topLeft
         final Integer width);
 ```
 
-### Usage 
+### Usage
 Init client
 ```java
 public static final String TEST_ADMIN_PRIVATE_KEY_HEX = "a996c6d610d93faf82ad5b15407b66d3a2b72a284b5c2fd4097b5a3e735a79e1"; // emulator
@@ -127,7 +140,7 @@ public void voucherClientPoolconcurrentlysendTransaction() throws Exception {
     final GenericObjectPool<VoucherClient> objectPool = new GenericObjectPool<>(voucherClientPoolFactory,
             objectPoolConfig);
 
-    // Start 
+    // Start
     for (int i = 0; i < simTransactionCount; ++i) {
         final int idx = i;
         executorService.execute(new Thread(() -> {
