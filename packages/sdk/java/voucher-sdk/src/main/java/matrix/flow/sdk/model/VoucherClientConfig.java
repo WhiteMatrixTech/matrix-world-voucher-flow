@@ -27,6 +27,8 @@ public class VoucherClientConfig {
 
     private String fusdAddress;
 
+    private String flowTokenAddress;
+
     private String fungibleTokenAddress;
 
     private String nonFungibleTokenAddress;
