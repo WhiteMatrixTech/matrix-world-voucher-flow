@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Builder.Default;
 
 @Data
-@Builder
+@Builder(toBuilder=true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class VoucherClientConfig {

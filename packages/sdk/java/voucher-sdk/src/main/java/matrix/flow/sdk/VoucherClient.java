@@ -95,8 +95,12 @@ public final class VoucherClient extends FlowSimpleClient {
         if (result.getStatus() != FlowTransactionStatus.SEALED) {
             throw new FlowClientException("There is something wrong with the transaction");
         }
+        if (!result.getErrorMessage().isEmpty()) {
+            throw new FlowClientException(result.getErrorMessage());
+        }
 
         final VoucherMetadataModel mintedToken = new VoucherMetadataModel();
+        int tokenCount = 0;
         for (final FlowEvent event : result.getEvents()) {
             if (event.getType().contains(this.clientConfig.getVoucherAddress() + ".MatrixWorldVoucher.Minted")) {
                 final UInt64NumberField id = (UInt64NumberField) event.getField("id");
@@ -111,9 +115,15 @@ public final class VoucherClient extends FlowSimpleClient {
                 mintedToken.setHash(hash.getValue());
                 final StringField type = (StringField) event.getField("type");
                 mintedToken.setType(type.getValue());
+                tokenCount++;
                 break;
             }
         }
+
+        if (tokenCount != 1) {
+            throw new FlowClientException("Number of mintedTokens not match with input size");
+        }
+
         return mintedToken;
     }
 
@@ -127,8 +137,8 @@ public final class VoucherClient extends FlowSimpleClient {
      *
      * @throws FlowClientException runtime exception
      */
-    public List<VoucherMetadataModel> batchMintVoucher(final String[] recipientAddressStringList,
-            final String[] landInfoHashStringList) throws FlowClientException {
+    public List<VoucherMetadataModel> batchMintVoucher(final List<String> recipientAddressStringList,
+            final List<String> landInfoHashStringList) throws FlowClientException {
 
         final List<AddressField> recipientAddressListC = new ArrayList<>();
         final List<StringField> landInfoHashStringListC = new ArrayList<>();
@@ -137,12 +147,12 @@ public final class VoucherClient extends FlowSimpleClient {
         final List<StringField> animationUrlsC = new ArrayList<>();
         final List<StringField> typesC = new ArrayList<>();
 
-        for (int i = 0; i < recipientAddressStringList.length; ++i) {
-            final VoucherMetadataModel metadata = VoucherMetadataModel.builder().hash(landInfoHashStringList[i])
+        for (int i = 0; i < recipientAddressStringList.size(); ++i) {
+            final VoucherMetadataModel metadata = VoucherMetadataModel.builder().hash(landInfoHashStringList.get(i))
                     .build();
             recipientAddressListC
-                    .add(new AddressField(new FlowAddress(recipientAddressStringList[i]).getBase16Value()));
-            landInfoHashStringListC.add(new StringField(landInfoHashStringList[i]));
+                    .add(new AddressField(new FlowAddress(recipientAddressStringList.get(i)).getBase16Value()));
+            landInfoHashStringListC.add(new StringField(landInfoHashStringList.get(i)));
             namesC.add(new StringField(metadata.getName()));
             descriptionsC.add(new StringField(metadata.getDescription()));
             animationUrlsC.add(new StringField(metadata.getAnimationUrl()));
@@ -175,6 +185,9 @@ public final class VoucherClient extends FlowSimpleClient {
         if (result.getStatus() != FlowTransactionStatus.SEALED) {
             throw new FlowClientException("There is something wrong with the transaction");
         }
+        if (!result.getErrorMessage().isEmpty()) {
+            throw new FlowClientException(result.getErrorMessage());
+        }
 
         // TokenList
         final List<VoucherMetadataModel> mintedTokens = new ArrayList<>();
@@ -195,6 +208,10 @@ public final class VoucherClient extends FlowSimpleClient {
                 mintedToken.setType(type.getValue());
                 mintedTokens.add(mintedToken);
             }
+        }
+
+        if (mintedTokens.size() != landInfoHashStringList.size()) {
+            throw new FlowClientException("Number of mintedTokens not match with input size");
         }
 
         return mintedTokens;

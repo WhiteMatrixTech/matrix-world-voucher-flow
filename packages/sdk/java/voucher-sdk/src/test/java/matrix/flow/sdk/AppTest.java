@@ -231,8 +231,8 @@ public class AppTest {
 
         // Mint Voucher if verification is success
         final List<VoucherMetadataModel> newTokens = adminClient.batchMintVoucher(
-                recipientList.toArray(new String[recipientList.size()]),
-                landInfoHashStringList.toArray(new String[landInfoHashStringList.size()]));
+                recipientList,
+                landInfoHashStringList);
 
         assert (newTokens.size() == simBatchSize);
         for (int i = 0; i < simBatchSize; i++) {
@@ -254,7 +254,7 @@ public class AppTest {
     @Test(timeout = 10000000)
     public void voucherClientPoolconcurrentlysendTransaction() throws Exception {
         // Simulate concurrent requests in backend
-        final int simTransactionCount = 30;
+        final int simTransactionCount = 100;
         final CountDownLatch updateLatch = new CountDownLatch(simTransactionCount);
         final ExecutorService executorService = Executors.newFixedThreadPool(simTransactionCount);
 
@@ -274,6 +274,7 @@ public class AppTest {
                 VoucherClient client = null;
                 try {
                     client = objectPool.borrowObject();
+                    System.out.println(client.getAccountKeyIndex());
                     String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
                     client.mintVoucher(userAccountAddress.getBase16Value(), "TEST_HASH_POOL" + idx + timeStamp);
                 } catch (final Exception e) {
