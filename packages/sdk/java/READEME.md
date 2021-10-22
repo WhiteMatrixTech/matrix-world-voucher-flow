@@ -69,7 +69,7 @@ batchMintVoucher
 *
 * @throws FlowClientException runtime exception
 */
-public List<VoucherMetadataModel> batchMintVoucher(final String[] recipientAddressStringList, final String[] landInfoHashStringList) throws FlowClientException;
+public List<VoucherMetadataModel> batchMintVoucher(final List<String> recipientAddressStringList, final List<String> landInfoHashStringList) throws FlowClientException;
 ```
 
 generateLandInfoHash
@@ -132,7 +132,7 @@ public void voucherClientPoolconcurrentlysendTransaction() throws Exception {
     final ExecutorService executorService = Executors.newFixedThreadPool(simTransactionCount);
 
     // Build pool
-    final VoucherClientPoolFactory voucherClientPoolFactory = new VoucherClientPoolFactory(adminClientConfig);
+    final VoucherClientPoolFactory voucherClientPoolFactory = new VoucherClientPoolFactory(adminClientConfig, 10);
     final GenericObjectPoolConfig<VoucherClient> objectPoolConfig = new GenericObjectPoolConfig<>();
     objectPoolConfig.setMaxTotal(5); // do not exceed adminAccount's number of proposal keys
     objectPoolConfig.setMaxWaitMillis(120000);

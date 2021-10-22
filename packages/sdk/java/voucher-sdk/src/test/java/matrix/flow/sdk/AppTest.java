@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import matrix.flow.sdk.model.PaymentType;
 import matrix.flow.sdk.model.VoucherClientConfig;
 import matrix.flow.sdk.model.VoucherMetadataModel;
 
@@ -46,6 +47,7 @@ public class AppTest {
                                                                                                                              // key
     public static final String FUNGIBLE_TOKEN_ADDRESS = "ee82856bf20e2aa6";
     public static final String FUSD_ADDRESS = "f8d6e0586b0a20c7";
+    public static final String FLOW_TOKEN_ADDRESS = "0ae53cb6e3f42a79";
     public static final String NON_FUNGIBLE_TOKEN_ADDRESS = "f8d6e0586b0a20c7";
     public static final String VOUCHER_ADDRESS = "01cf0e2f2f715450";
 
@@ -55,12 +57,12 @@ public class AppTest {
     final VoucherClientConfig adminClientConfig = VoucherClientConfig.builder().host("localhost").port(3569)
             .privateKeyHex(TEST_ADMIN_PRIVATE_KEY_HEX).keyIndex(0).nonFungibleTokenAddress(NON_FUNGIBLE_TOKEN_ADDRESS)
             .fungibleTokenAddress(FUNGIBLE_TOKEN_ADDRESS).adminAccountAddress(testAdminAccountAddress.getBase16Value())
-            .voucherAddress(VOUCHER_ADDRESS).waitForSealTries(20).fusdAddress(FUSD_ADDRESS).build();
+            .voucherAddress(VOUCHER_ADDRESS).waitForSealTries(20).fusdAddress(FUSD_ADDRESS).flowTokenAddress(FLOW_TOKEN_ADDRESS).build();
 
     final VoucherClientConfig userClientConfig = VoucherClientConfig.builder().host("localhost").port(3569)
             .privateKeyHex(SERVICE_PRIVATE_KEY_HEX).keyIndex(0).nonFungibleTokenAddress(NON_FUNGIBLE_TOKEN_ADDRESS)
             .fungibleTokenAddress(FUNGIBLE_TOKEN_ADDRESS).adminAccountAddress(userAccountAddress.getBase16Value())
-            .voucherAddress(VOUCHER_ADDRESS).waitForSealTries(20).fusdAddress(FUSD_ADDRESS).build();
+            .voucherAddress(VOUCHER_ADDRESS).waitForSealTries(20).fusdAddress(FUSD_ADDRESS).flowTokenAddress(FLOW_TOKEN_ADDRESS).build();
 
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
@@ -71,6 +73,72 @@ public class AppTest {
     @Test
     public void shouldAnswerWithTrue() {
         assertTrue(true);
+    }
+
+    /**
+     * Test transferCorrectFLOWShouldNotThrowException
+     *
+     * @throws Exception
+     */
+    @Test
+    public void transferCorrectFLOWShouldNotThrowException() throws Exception {
+        final VoucherClient adminClient = new VoucherClient(adminClientConfig);
+
+        final VoucherClient userClient = new VoucherClient(userClientConfig);
+
+        final BigDecimal targetAmount = BigDecimal.valueOf(100000000, 8);
+        final FlowId txId = userClient.transferFlowToken(userAccountAddress, testAdminAccountAddress, targetAmount);
+
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FLOW);
+
+        // expected no exception
+        assertTrue(true);
+    }
+
+    /**
+     * Test transferInCorrectFLOWShouldThrowException
+     *
+     * @throws Exception
+     */
+    @Test
+    public void transferIncorrectFLOWShouldThrowException() throws Exception {
+        exceptionRule.expectMessage("Withdrawn amount not match");
+        final VoucherClient adminClient = new VoucherClient(adminClientConfig);
+
+        final VoucherClient userClient = new VoucherClient(userClientConfig);
+
+        final BigDecimal realAmount = BigDecimal.valueOf(100000000, 8);
+        final BigDecimal targetAmount = BigDecimal.valueOf(10000000, 8);
+        final FlowId txId = userClient.transferFlowToken(userAccountAddress, testAdminAccountAddress, realAmount);
+
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FLOW);
+
+    }
+
+    /**
+     * Test verifyFLOWTransactionShouldMintVoucherToSender
+     *
+     * @throws Exception
+     */
+    @Test
+    public void verifyFLOWTransactionShouldMintVoucherToSender() throws Exception {
+        final VoucherClient adminClient = new VoucherClient(adminClientConfig);
+
+        final VoucherClient userClient = new VoucherClient(userClientConfig);
+
+        final BigDecimal targetAmount = BigDecimal.valueOf(10000000, 8);
+        final FlowId txId = userClient.transferFlowToken(userAccountAddress, testAdminAccountAddress, targetAmount);
+
+        // Simulate backend logic because txId will be submitted from frontend in real
+        // case
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FLOW);
+
+        // Mint Voucher if verification is success
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        String testHash = "TEST_HASH_TEST_VERIFY,verifyFLOWTransactionShouldMintVoucherToSender," + timeStamp;
+        VoucherMetadataModel newToken = adminClient.mintVoucher(userAccountAddress.getBase16Value(), testHash);
+        assert (newToken.getHash().equals(testHash));
+        System.out.println(newToken.toString());
     }
 
     /**
@@ -87,7 +155,7 @@ public class AppTest {
         final BigDecimal targetAmount = BigDecimal.valueOf(100000000, 8);
         final FlowId txId = userClient.transferFUSD(userAccountAddress, testAdminAccountAddress, targetAmount);
 
-        adminClient.verifyFUSDTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value());
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FUSD);
 
         // expected no exception
         assertTrue(true);
@@ -100,7 +168,7 @@ public class AppTest {
      */
     @Test
     public void transferIncorrectFUSDShouldThrowException() throws Exception {
-        exceptionRule.expectMessage("Withdrawn FUSD amount not match");
+        exceptionRule.expectMessage("Withdrawn amount not match");
         final VoucherClient adminClient = new VoucherClient(adminClientConfig);
 
         final VoucherClient userClient = new VoucherClient(userClientConfig);
@@ -109,7 +177,7 @@ public class AppTest {
         final BigDecimal targetAmount = BigDecimal.valueOf(10000000, 8);
         final FlowId txId = userClient.transferFUSD(userAccountAddress, testAdminAccountAddress, realAmount);
 
-        adminClient.verifyFUSDTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value());
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FUSD);
 
     }
 
@@ -129,11 +197,11 @@ public class AppTest {
 
         // Simulate backend logic because txId will be submitted from frontend in real
         // case
-        adminClient.verifyFUSDTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value());
+        adminClient.verifyPaymentTransaction(userAccountAddress.getBase16Value(), targetAmount, txId.getBase16Value(), PaymentType.FUSD);
 
         // Mint Voucher if verification is success
         String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-        String testHash = "TEST_HASH_TEST_VERIFY" + timeStamp;
+        String testHash = "TEST_HASH_TEST_VERIFY,verifyFUSDTransactionShouldMintVoucherToSender," + timeStamp;
         VoucherMetadataModel newToken = adminClient.mintVoucher(userAccountAddress.getBase16Value(), testHash);
         assert (newToken.getHash().equals(testHash));
         System.out.println(newToken.toString());
@@ -163,8 +231,8 @@ public class AppTest {
 
         // Mint Voucher if verification is success
         final List<VoucherMetadataModel> newTokens = adminClient.batchMintVoucher(
-                recipientList.toArray(new String[recipientList.size()]),
-                landInfoHashStringList.toArray(new String[landInfoHashStringList.size()]));
+                recipientList,
+                landInfoHashStringList);
 
         assert (newTokens.size() == simBatchSize);
         for (int i = 0; i < simBatchSize; i++) {
@@ -186,14 +254,14 @@ public class AppTest {
     @Test(timeout = 10000000)
     public void voucherClientPoolconcurrentlysendTransaction() throws Exception {
         // Simulate concurrent requests in backend
-        final int simTransactionCount = 30;
+        final int simTransactionCount = 100;
         final CountDownLatch updateLatch = new CountDownLatch(simTransactionCount);
         final ExecutorService executorService = Executors.newFixedThreadPool(simTransactionCount);
 
         // Build pool
-        final VoucherClientPoolFactory voucherClientPoolFactory = new VoucherClientPoolFactory(adminClientConfig);
+        final VoucherClientPoolFactory voucherClientPoolFactory = new VoucherClientPoolFactory(adminClientConfig, 10);
         final GenericObjectPoolConfig<VoucherClient> objectPoolConfig = new GenericObjectPoolConfig<>();
-        objectPoolConfig.setMaxTotal(5); // do not exceed adminAccount's number of proposal keys
+        objectPoolConfig.setMaxTotal(7); // do not exceed adminAccount's number of proposal keys
         objectPoolConfig.setMaxWaitMillis(120000);
         objectPoolConfig.setBlockWhenExhausted(true);
         final GenericObjectPool<VoucherClient> objectPool = new GenericObjectPool<>(voucherClientPoolFactory,
@@ -206,10 +274,12 @@ public class AppTest {
                 VoucherClient client = null;
                 try {
                     client = objectPool.borrowObject();
+                    System.out.println(client.getAccountKeyIndex());
                     String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
                     client.mintVoucher(userAccountAddress.getBase16Value(), "TEST_HASH_POOL" + idx + timeStamp);
                 } catch (final Exception e) {
                     e.printStackTrace();
+                    throw new RuntimeException(e);
                 } finally {
                     if (client != null) {
                         objectPool.returnObject(client);

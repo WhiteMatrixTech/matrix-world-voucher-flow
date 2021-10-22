@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Builder.Default;
 
 @Data
-@Builder
+@Builder(toBuilder=true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class VoucherClientConfig {
@@ -26,6 +26,8 @@ public class VoucherClientConfig {
     private String adminAccountAddress;
 
     private String fusdAddress;
+
+    private String flowTokenAddress;
 
     private String fungibleTokenAddress;
 

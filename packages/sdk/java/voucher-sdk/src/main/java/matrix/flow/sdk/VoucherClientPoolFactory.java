@@ -1,6 +1,6 @@
 package matrix.flow.sdk;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -9,17 +9,21 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import matrix.flow.sdk.model.VoucherClientConfig;
 
 public final class VoucherClientPoolFactory extends BasePooledObjectFactory<VoucherClient> {
-    private final AtomicInteger atomicInteger = new AtomicInteger();
+    private final ConcurrentLinkedQueue<Integer> keyIndexQueue = new ConcurrentLinkedQueue<Integer>();
 
     private final VoucherClientConfig clientConfig;
 
-    public VoucherClientPoolFactory(final VoucherClientConfig clientConfig) {
+    public VoucherClientPoolFactory(final VoucherClientConfig clientConfig, final int keyCapacity) {
         this.clientConfig = clientConfig;
+        for (int i = 0; i < keyCapacity; i++) {
+            this.keyIndexQueue.add(i);
+        }
     }
 
     public VoucherClient create() {
-        clientConfig.setKeyIndex(atomicInteger.getAndDecrement());
-        return new VoucherClient(clientConfig);
+        final VoucherClientConfig localConfig = this.clientConfig.toBuilder().keyIndex(this.keyIndexQueue.poll())
+                .build();
+        return new VoucherClient(localConfig);
     }
 
     public PooledObject<VoucherClient> wrap(final VoucherClient client) {
@@ -28,7 +32,9 @@ public final class VoucherClientPoolFactory extends BasePooledObjectFactory<Vouc
 
     @Override
     public void destroyObject(final PooledObject<VoucherClient> client) throws Exception {
+        final int keyIndex = client.getObject().getAccountKeyIndex();
         super.destroyObject(client);
-        atomicInteger.getAndDecrement();
+        this.keyIndexQueue.add(keyIndex);
     }
+
 }
