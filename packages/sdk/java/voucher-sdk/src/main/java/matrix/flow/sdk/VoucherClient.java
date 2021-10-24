@@ -24,11 +24,13 @@ import com.nftco.flow.sdk.cadence.UInt64NumberField;
 import com.nftco.flow.sdk.crypto.Crypto;
 import com.nftco.flow.sdk.crypto.PrivateKey;
 
+import lombok.extern.log4j.Log4j2;
 import matrix.flow.sdk.model.FlowClientException;
 import matrix.flow.sdk.model.PaymentType;
 import matrix.flow.sdk.model.VoucherClientConfig;
 import matrix.flow.sdk.model.VoucherMetadataModel;
 
+@Log4j2
 public final class VoucherClient extends FlowSimpleClient {
 
     private final FlowAddress accountAddress;
@@ -221,16 +223,20 @@ public final class VoucherClient extends FlowSimpleClient {
      * Verify a FUSD transaction
      *
      * @param payerAddress  payer account address
-     * @param amount        expected amount to be received
+     * @param targetAmount  expected amount to be received
      * @param transactionId flow transactionId
      *
      * @throws Exception with reason of unexpected error
-     * @TODO: Custom RunTimeException
      */
-    public boolean verifyPaymentTransaction(final String payerAddress, final BigDecimal amount,
+    public void verifyPaymentTransaction(final String payerAddress, final BigDecimal targetAmount,
             final String transactionId, final PaymentType paymentType) throws FlowClientException {
         String paymentTokenAddress;
         String paymentTokenName;
+        try {
+
+        } catch (Exception e) {
+            throw new FlowClientException(e.toString());
+        }
         if (paymentType == PaymentType.FUSD) {
             paymentTokenAddress = this.clientConfig.getFusdAddress();
             paymentTokenName = "FUSD";
@@ -243,49 +249,49 @@ public final class VoucherClient extends FlowSimpleClient {
 
         final FlowTransactionResult txResult = this.waitForSeal((new FlowId(transactionId)));
 
-        if (amount.scale() != 8) {
+        if (targetAmount.scale() != 8) {
             throw new FlowClientException(
                     "FUSD amount must have exactly 8 decimal places of precision (e.g. 10.00000000)");
         }
 
         final List<FlowEvent> events = txResult.getEvents();
 
-        FlowEvent withdrawnEvent = null;
-        FlowEvent depositedEvent = null;
+        BigDecimal payerWithdrawnAmount = BigDecimal.ZERO;
+
+        BigDecimal funderDepositedAmount = BigDecimal.ZERO;
 
         for (FlowEvent flowEvent : events) {
             if (flowEvent.getType().equals("A." + paymentTokenAddress + "." + paymentTokenName + ".TokensWithdrawn")) {
-                withdrawnEvent = flowEvent;
+                final AddressField from = (AddressField) flowEvent.getField("from").getValue();
+                if (from.getValue().substring(2).equals(payerAddress)) {
+                    payerWithdrawnAmount = payerWithdrawnAmount
+                            .add(((UFix64NumberField) flowEvent.getField("amount")).toBigDecimal());
+                }
             } else if (flowEvent.getType()
                     .equals("A." + paymentTokenAddress + "." + paymentTokenName + ".TokensDeposited")) {
-                depositedEvent = flowEvent;
+                final AddressField to = (AddressField) flowEvent.getField("to").getValue();
+                if (to.getValue().substring(2).equals(this.accountAddress.getBase16Value())) {
+                    funderDepositedAmount = funderDepositedAmount
+                            .add(((UFix64NumberField) flowEvent.getField("amount")).toBigDecimal());
+                }
             }
         }
 
-        if (withdrawnEvent == null || depositedEvent == null) {
-            throw new FlowClientException("Cannot parse payment events");
+        log.info(String.format("Target: %s, payerW: %s, funderDep: %s", targetAmount.toString(), payerWithdrawnAmount.toString(), funderDepositedAmount.toString()));
+
+
+        // verify payment
+        if (funderDepositedAmount.compareTo(targetAmount) < 0) {
+            log.error(String.format("Insufficient payment to funder address with target Amount: %s, received: %s",
+                    targetAmount.toString(), funderDepositedAmount.toString()));
+            throw new FlowClientException("Insufficient payment");
         }
 
-        final UFix64NumberField amountFrom = (UFix64NumberField) withdrawnEvent.getField("amount");
-
-        if (!amountFrom.toBigDecimal().equals(amount)) {
-            throw new FlowClientException("Withdrawn amount not match");
+        if (funderDepositedAmount.compareTo(payerWithdrawnAmount) > 0) {
+            log.error(String.format("Miss matched payment payer pay %s less than funder received %s",
+                    paymentTokenAddress.toString(), funderDepositedAmount.toString()));
+            throw new FlowClientException("Miss matched payment");
         }
-        final AddressField from = (AddressField) withdrawnEvent.getField("from").getValue();
-        if (!from.getValue().substring(2).equals(payerAddress)) {
-            throw new FlowClientException("Withdrawn from wrong address");
-        }
-
-        final UFix64NumberField amountTo = (UFix64NumberField) depositedEvent.getField("amount");
-        if (!amountTo.toBigDecimal().equals(amount)) {
-            throw new FlowClientException("Deposited amount not match");
-        }
-
-        final AddressField to = (AddressField) depositedEvent.getField("to").getValue();
-        if (!to.getValue().substring(2).equals(this.accountAddress.getBase16Value())) {
-            throw new FlowClientException("Deposited to wrong address");
-        }
-        return true;
     }
 
     public int getAccountKeyIndex() {
