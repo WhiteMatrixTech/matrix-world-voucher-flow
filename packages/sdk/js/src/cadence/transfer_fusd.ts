@@ -1,6 +1,6 @@
 import * as fcl from "@onflow/fcl";
 
-export const transferFusd: string = fcl.transaction`
+export const transferFUSDScript: string = fcl.transaction`
 import FungibleToken from 0xFUNGIBLE_TOKEN_ADDRESS
 import FUSD from 0xFUSD_ADDRESS
 transaction(amount: UFix64, recipient: Address) {
