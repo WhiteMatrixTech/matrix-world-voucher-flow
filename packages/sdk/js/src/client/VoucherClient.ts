@@ -1,54 +1,62 @@
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
-import {getFUSDBalance} from "../cadence/get_fusd_balance";
+import {getFLOWBalanceScript} from "../cadence/get_flow_balance";
+import {getFUSDBalanceScript} from "../cadence/get_fusd_balance";
+import {transferFLOWScript} from "../cadence/transfer_flow";
+import {transferFUSDScript} from "../cadence/transfer_fusd";
 
-import {transferFusd} from "../cadence/transfer_fusd";
-
-export enum FLowEnv {
+export enum FlowEnv {
     localEmulator,
     flowTestnet,
     flowMainnet
 }
 
 export interface VoucherClient {
-    setupGlobalFcl(env: FLowEnv): Promise<void>;
+    setupGlobalFcl(env: FlowEnv): Promise<void>;
     transferFUSD(to: string, amount: string): Promise<string>;
     FUSDBalance(address: string): Promise<number>;
     transferFLOW(to: string, amount: string): Promise<string>;
-    FLOWBalance(): Promise<number>;
+    FLOWBalance(address: string): Promise<number>;
 }
 
 export class FclVoucherClient implements VoucherClient {
-
     /** Setup global FCL instance
      *
      * @async
-     * @param {FLowEnv} env - FlowEnv.{localEmulator, flowTestnet, flowMainnet}
+     * @param {FlowEnv} env - FlowEnv.{localEmulator, flowTestnet, flowMainnet}
      * @returns {Promise<void>}
      */
-    public async setupGlobalFcl(env: FLowEnv): Promise<void> {
+    public async setupGlobalFcl(env: FlowEnv): Promise<void> {
         switch (env) {
-            case FLowEnv.localEmulator: {
+            case FlowEnv.flowTestnet: {
                 await fcl
                     .config()
-                    // Point App at Emulator
                     .put("accessNode.api", "http://localhost:8080")
-                    // Point FCL at dev-wallet (default port)
                     .put("discovery.wallet", "http://localhost:8701/fcl/authn")
-                    .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
-                    .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7");
+                    .put("0xFUNGIBLE_TOKEN_ADDRESS", "0x9a0766d93b6608b7")
+                    .put("0xFUSD_ADDRESS", "0xe223d8a629e49c68")
+                    .put("0xFLOW_TOKEN_ADDRESS", "0x7e60df042a9c0868");
                 break;
             }
-
-            case FLowEnv.flowTestnet: {
-                return Promise.reject("Testnet env is not ready");
+            case FlowEnv.flowMainnet: {
+                await fcl
+                    .config()
+                    .put("accessNode.api", "http://localhost:8080")
+                    .put("discovery.wallet", "http://localhost:8701/fcl/authn")
+                    .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xf233dcee88fe0abe")
+                    .put("0xFUSD_ADDRESS", "0x3c5959b568896393")
+                    .put("0xFLOW_TOKEN_ADDRESS", "0x1654653399040a61");
+                break;
             }
-
-            case FLowEnv.flowMainnet: {
-                return Promise.reject("Mainnet env is not ready");
-            }
+            case FlowEnv.localEmulator:
             default:
-                return Promise.reject(`${env} is not supported`);
+                await fcl
+                    .config()
+                    .put("accessNode.api", "http://localhost:8080")
+                    .put("discovery.wallet", "http://localhost:8701/fcl/authn")
+                    .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
+                    .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7")
+                    .put("0xFLOW_TOKEN_ADDRESS", "0x0ae53cb6e3f42a79");
         }
     }
 
@@ -63,7 +71,7 @@ export class FclVoucherClient implements VoucherClient {
     public async transferFUSD(to: string, amount: string): Promise<string> {
         try {
             const response = await fcl.send([
-                transferFusd,
+                transferFUSDScript,
                 fcl.args([fcl.arg(amount, t.UFix64), fcl.arg(to, t.Address)]),
                 fcl.proposer(fcl.currentUser().authorization),
                 fcl.authorizations([fcl.currentUser().authorization]),
@@ -90,7 +98,11 @@ export class FclVoucherClient implements VoucherClient {
      */
     public async FUSDBalance(address: string): Promise<number> {
         try {
-            const response = await fcl.send([getFUSDBalance, fcl.args([fcl.arg(address, t.Address)]), fcl.limit(1000)]);
+            const response = await fcl.send([
+                getFUSDBalanceScript,
+                fcl.args([fcl.arg(address, t.Address)]),
+                fcl.limit(1000)
+            ]);
             return fcl.decode(response);
         } catch (error) {
             console.error(error);
@@ -98,13 +110,53 @@ export class FclVoucherClient implements VoucherClient {
         }
     }
 
+    /**
+     * Send transferFLOW transaction
+     *
+     * @async
+     * @param {string} to - addresses of recipient
+     * @param {string} amount - amount in string (1.0 means 1.0 FLOW)
+     * @returns {Promise<string>} transactionId which can be used to verify the payment to server
+     */
     public async transferFLOW(to: string, amount: string): Promise<string> {
-        // TODO may or may not need
-        return "000000000000000000000000000000000000000000000";
+        try {
+            const response = await fcl.send([
+                transferFLOWScript,
+                fcl.args([fcl.arg(amount, t.UFix64), fcl.arg(to, t.Address)]),
+                fcl.proposer(fcl.currentUser().authorization),
+                fcl.authorizations([fcl.currentUser().authorization]),
+                fcl.limit(1000),
+                fcl.payer(fcl.currentUser().authorization)
+            ]);
+            const ret = await fcl.tx(response).onceSealed();
+            if (ret.errorMessage !== "" && ret.status != 4) {
+                return Promise.reject(ret.errorMessage);
+            }
+            return response.transactionId;
+        } catch (error) {
+            console.error(error);
+            return Promise.reject("Something is wrong with this transaction");
+        }
     }
 
-    public async FLOWBalance(): Promise<number> {
-        // TODO may or may not need
-        return 0;
+    /**
+     * Get FLOWBalance of an Account
+     *
+     * @async
+     * @param {string} address - account address
+     * @returns {Promise<number>} account balance (1.0 means 1.0 FLOW)
+     */
+    public async FLOWBalance(address: string): Promise<number> {
+        try {
+            const response = await fcl.send([
+                getFLOWBalanceScript,
+                fcl.args([fcl.arg(address, t.Address)]),
+                fcl.limit(1000)
+            ]);
+            return fcl.decode(response);
+        } catch (error) {
+            console.error(error);
+            return Promise.reject("Something is wrong with fetching FUSD balance");
+        }
     }
 }

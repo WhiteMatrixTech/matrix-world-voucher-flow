@@ -1,6 +1,6 @@
 import * as fcl from "@onflow/fcl";
 
-export const getFUSDBalance: string = fcl.script`
+export const getFUSDBalanceScript: string = fcl.script`
 import FungibleToken from 0xFUNGIBLE_TOKEN_ADDRESS
 import FUSD from 0xFUSD_ADDRESS
 pub fun main(address: Address): UFix64 {

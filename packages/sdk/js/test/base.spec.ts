@@ -2,12 +2,13 @@ import * as fcl from "@onflow/fcl";
 
 describe("FlowFCLBase", () => {
     before("setup accounts", async () => {
-        await fcl.config()
+        await fcl
+            .config()
             // Point App at Emulator
             .put("accessNode.api", "http://localhost:8080")
             // Point FCL at dev-wallet (default port)
             .put("discovery.wallet", "http://localhost:8701/fcl/authn");
-        await fcl.logIn()
+        await fcl.logIn();
         await fcl.authenticate();
     });
 
@@ -34,6 +35,6 @@ describe("FlowFCLBase", () => {
                 console.log("error");
                 console.log(error);
             }
-        }).timeout(30000);
+        });
     });
 });
