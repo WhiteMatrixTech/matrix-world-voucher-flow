@@ -1,0 +1,49 @@
+{
+  "name": "@white-matrix/matrix-world-voucher-flow-sdk-node",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn build:clean && yarn tsc",
+    "build:clean": "rm -rf dist && rm -f tsconfig.tsbuildinfo",
+    "lint": "eslint \"**/*.{js,ts}\"",
+    "lint:fix": "eslint --fix \"**/*.{js,ts}\"",
+    "format": "prettier --check \"**/*.{ts,js}\"",
+    "format:fix": "prettier --write \"**/*.{ts,js}\"",
+    "compile": "hardhat compile",
+    "test": "echo PLACEHOLDER",
+    "test:cov": "echo PLACEHOLDER"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.10.3",
+    "@white-matrix/eslint-config-ts": "^0.0.6",
+    "cpy": "^8.1.2",
+    "cpy-cli": "^3.1.1",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.3",
+    "lint": "^0.7.0",
+    "lint-staged": "^11.1.2",
+    "mocha": "^9.1.2",
+    "nyc": "^15.1.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "dependencies": {
+    "@onflow/fcl": "^0.0.77",
+    "@onflow/types": "^0.0.5",
+    "pino": "^7.0.3",
+    "umi-request": "^1.4.0"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint",
+      "prettier --check"
+    ]
+  }
+}
