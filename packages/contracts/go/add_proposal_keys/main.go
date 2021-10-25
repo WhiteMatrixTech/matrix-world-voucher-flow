@@ -51,7 +51,7 @@ func main() {
 		SetPayer(acctAddress).
 		AddAuthorizer(acctAddress)
 
-    if err := tx.AddArgument(cadence.NewUInt16(10)); err != nil {
+    if err := tx.AddArgument(cadence.NewUInt16(100)); err != nil {
         panic(err)
     }
 
