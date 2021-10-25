@@ -27,6 +27,7 @@ import com.nftco.flow.sdk.crypto.PrivateKey;
 import lombok.extern.log4j.Log4j2;
 import matrix.flow.sdk.model.FlowClientException;
 import matrix.flow.sdk.model.PaymentType;
+import matrix.flow.sdk.model.TransferEvent;
 import matrix.flow.sdk.model.VoucherClientConfig;
 import matrix.flow.sdk.model.VoucherMetadataModel;
 
@@ -151,8 +152,7 @@ public final class VoucherClient extends FlowSimpleClient {
         for (int i = 0; i < recipientAddressStringList.size(); ++i) {
             final VoucherMetadataModel metadata = VoucherMetadataModel.builder().hash(landInfoHashStringList.get(i))
                     .build();
-            recipientAddressListC
-                    .add(new AddressField(recipientAddressStringList.get(i)));
+            recipientAddressListC.add(new AddressField(recipientAddressStringList.get(i)));
             landInfoHashStringListC.add(new StringField(landInfoHashStringList.get(i)));
             namesC.add(new StringField(metadata.getName()));
             descriptionsC.add(new StringField(metadata.getDescription()));
@@ -219,6 +219,63 @@ public final class VoucherClient extends FlowSimpleClient {
     }
 
     /**
+     * Resolve a transferEvent by transactionId
+     *
+     * @param transactionId flow transactionId
+     * @param paymentType
+     *
+     * @return TransferEvent
+     *
+     * @throws FlowClientException
+     */
+    public TransferEvent resolveTransferEventFromTransactionId(final String transactionId,
+            final PaymentType paymentType) throws FlowClientException {
+        String paymentTokenAddress;
+        String paymentTokenName;
+        if (paymentType == PaymentType.FUSD) {
+            paymentTokenAddress = this.clientConfig.getFusdAddress();
+            paymentTokenName = "FUSD";
+        } else if (paymentType == PaymentType.FLOW) {
+            paymentTokenAddress = this.clientConfig.getFlowTokenAddress();
+            paymentTokenName = "FlowToken";
+        } else {
+            throw new FlowClientException("Unknown payment type");
+        }
+
+        final FlowTransactionResult txResult = this.waitForSeal((new FlowId(transactionId)));
+        final List<FlowEvent> events = txResult.getEvents();
+
+        FlowEvent withdrawnEvent = null;
+        FlowEvent depositedEvent = null;
+
+        for (FlowEvent flowEvent : events) {
+            if (flowEvent.getType().equals("A." + paymentTokenAddress + "." + paymentTokenName + ".TokensWithdrawn")) {
+                withdrawnEvent = flowEvent;
+            } else if (flowEvent.getType()
+                    .equals("A." + paymentTokenAddress + "." + paymentTokenName + ".TokensDeposited")) {
+                depositedEvent = flowEvent;
+            }
+        }
+
+        if (withdrawnEvent == null || depositedEvent == null) {
+            log.error(String.format("Abnormal payment transaction with id: %s", transactionId));
+            throw new FlowClientException("Abnormal payment transaction");
+        }
+
+        final UFix64NumberField amountFrom = (UFix64NumberField) withdrawnEvent.getField("amount");
+        final AddressField from = (AddressField) withdrawnEvent.getField("from").getValue();
+        final UFix64NumberField amountTo = (UFix64NumberField) depositedEvent.getField("amount");
+        final AddressField to = (AddressField) depositedEvent.getField("to").getValue();
+
+        final TransferEvent resolvedTransferEvent = TransferEvent.builder().from(from.getValue().substring(2))
+                .amountFrom(amountFrom.toBigDecimal()).to(to.getValue().substring(2)).amountTo(amountTo.toBigDecimal())
+                .transactionId(transactionId).paymentType(paymentType).build();
+        log.info(String.format("resolved transfer %s", resolvedTransferEvent.toString()));
+
+        return resolvedTransferEvent;
+    }
+
+    /**
      * Verify a FUSD or FLOW transaction
      *
      * @param payerAddress  payer account address
@@ -231,11 +288,6 @@ public final class VoucherClient extends FlowSimpleClient {
             final String transactionId, final PaymentType paymentType) throws FlowClientException {
         String paymentTokenAddress;
         String paymentTokenName;
-        try {
-
-        } catch (Exception e) {
-            throw new FlowClientException(e.toString());
-        }
         if (paymentType == PaymentType.FUSD) {
             paymentTokenAddress = this.clientConfig.getFusdAddress();
             paymentTokenName = "FUSD";
@@ -246,12 +298,12 @@ public final class VoucherClient extends FlowSimpleClient {
             throw new FlowClientException("Unknown payment type");
         }
 
-        final FlowTransactionResult txResult = this.waitForSeal((new FlowId(transactionId)));
-
         if (targetAmount.scale() != 8) {
             throw new FlowClientException(
                     "FUSD amount must have exactly 8 decimal places of precision (e.g. 10.00000000)");
         }
+
+        final FlowTransactionResult txResult = this.waitForSeal((new FlowId(transactionId)));
 
         final List<FlowEvent> events = txResult.getEvents();
 
@@ -276,8 +328,8 @@ public final class VoucherClient extends FlowSimpleClient {
             }
         }
 
-        log.info(String.format("Target: %s, payerW: %s, funderDep: %s", targetAmount.toString(), payerWithdrawnAmount.toString(), funderDepositedAmount.toString()));
-
+        log.info(String.format("Target: %s, payerW: %s, funderDep: %s", targetAmount.toString(),
+                payerWithdrawnAmount.toString(), funderDepositedAmount.toString()));
 
         // verify payment
         if (funderDepositedAmount.compareTo(targetAmount) < 0) {
