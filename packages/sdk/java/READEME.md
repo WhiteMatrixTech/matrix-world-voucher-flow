@@ -33,15 +33,17 @@ public boolean verifyUserSignature(final String message, final String[] publicKe
 verifyFUSDTransaction
 ```java
 /**
-* Verify a FUSD transaction
+* Verify a FUSD or FLOW transaction
 *
-* @param payerAddress payer account address
-* @param amount expected amount to be received
+* @param payerAddress  payer account address
+* @param targetAmount  expected amount to be received (scale of 8)
 * @param transactionId flow transactionId
+* @param PaymentType   FLOW or FUSD enum
 *
 * @throws Exception with reason of unexpected error
 */
-public void verifyFUSDTransaction(final String payerAddress, final BigDecimal amount, final String transactionId) throws Exception
+public void verifyPaymentTransaction(final String payerAddress, final BigDecimal targetAmount,
+        final String transactionId, final PaymentType paymentType) throws FlowClientException;
 ```
 mintVoucher
 ```java

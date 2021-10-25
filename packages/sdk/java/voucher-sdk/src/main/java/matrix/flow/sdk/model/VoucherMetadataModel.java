@@ -25,5 +25,5 @@ public class VoucherMetadataModel {
     private String hash;
 
     @Default
-    private String type = "Land Voucher";
+    private String type = "Voucher";
 }

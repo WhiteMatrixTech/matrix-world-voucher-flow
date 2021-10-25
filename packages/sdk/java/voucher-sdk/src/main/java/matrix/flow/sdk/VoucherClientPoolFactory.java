@@ -6,17 +6,24 @@ import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
+import lombok.extern.log4j.Log4j2;
 import matrix.flow.sdk.model.VoucherClientConfig;
 
+@Log4j2
 public final class VoucherClientPoolFactory extends BasePooledObjectFactory<VoucherClient> {
     private final ConcurrentLinkedQueue<Integer> keyIndexQueue = new ConcurrentLinkedQueue<Integer>();
 
     private final VoucherClientConfig clientConfig;
 
-    public VoucherClientPoolFactory(final VoucherClientConfig clientConfig, final int keyCapacity) {
+    public VoucherClientPoolFactory(final VoucherClientConfig clientConfig, final int keyStartIndex,
+            final int keyCapacity) {
         this.clientConfig = clientConfig;
-        for (int i = 0; i < keyCapacity; i++) {
-            this.keyIndexQueue.add(i);
+
+        // Fulfill keyIndex
+        final int keyEndIndex = keyStartIndex + keyCapacity;
+        log.info(String.format("Create pool factory from global keyIndex %d to %d", keyStartIndex, keyEndIndex));
+        for (int keyIndex = keyStartIndex; keyIndex < keyEndIndex; keyIndex++) {
+            this.keyIndexQueue.add(keyIndex);
         }
     }
 
