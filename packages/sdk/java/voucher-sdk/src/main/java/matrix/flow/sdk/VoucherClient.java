@@ -65,7 +65,6 @@ public final class VoucherClient extends FlowSimpleClient {
             throws FlowClientException {
 
         // Setup cadence script
-        final FlowAddress recipientAddress = new FlowAddress(recipientAddressString);
         final FlowAccountKey senderAccountKey = this.getAccountKey(this.accountAddress,
                 this.clientConfig.getKeyIndex());
         String cadenceScript = readScript("mint_voucher.cdc.temp");
@@ -78,7 +77,7 @@ public final class VoucherClient extends FlowSimpleClient {
 
         // Build flow transaction
         FlowTransaction tx = new FlowTransaction(new FlowScript(cadenceScript.getBytes()),
-                Arrays.asList(new FlowArgument(new AddressField(recipientAddress.getBase16Value())),
+                Arrays.asList(new FlowArgument(new AddressField(recipientAddressString)),
                         new FlowArgument(new StringField(metadata.getName())),
                         new FlowArgument(new StringField(metadata.getDescription())),
                         new FlowArgument(new StringField(metadata.getAnimationUrl())),
@@ -153,7 +152,7 @@ public final class VoucherClient extends FlowSimpleClient {
             final VoucherMetadataModel metadata = VoucherMetadataModel.builder().hash(landInfoHashStringList.get(i))
                     .build();
             recipientAddressListC
-                    .add(new AddressField(new FlowAddress(recipientAddressStringList.get(i)).getBase16Value()));
+                    .add(new AddressField(recipientAddressStringList.get(i)));
             landInfoHashStringListC.add(new StringField(landInfoHashStringList.get(i)));
             namesC.add(new StringField(metadata.getName()));
             descriptionsC.add(new StringField(metadata.getDescription()));
@@ -220,7 +219,7 @@ public final class VoucherClient extends FlowSimpleClient {
     }
 
     /**
-     * Verify a FUSD transaction
+     * Verify a FUSD or FLOW transaction
      *
      * @param payerAddress  payer account address
      * @param targetAmount  expected amount to be received

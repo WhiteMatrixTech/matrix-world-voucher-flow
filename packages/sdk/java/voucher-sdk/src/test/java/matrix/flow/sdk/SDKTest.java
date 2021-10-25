@@ -348,7 +348,7 @@ public class SDKTest {
 
         final String hashAsHexString = adminClient.generateLandInfoHash(111, 1, 1, 1);
         final String hashAsHexStringCadence = adminClient.generateLandInfoHashCadence(111, 1, 1, 1);
-        // System.out.println(hashAsHexString);
+        System.out.println(hashAsHexString);
         // System.out.println(hashAsHexStringCadence);
         assertTrue("Java implementation of generateLandInfoHash should equals cadence version",
                 StringUtils.equals(hashAsHexStringCadence, hashAsHexString));

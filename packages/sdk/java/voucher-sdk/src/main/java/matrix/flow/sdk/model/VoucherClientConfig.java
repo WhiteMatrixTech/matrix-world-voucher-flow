@@ -21,7 +21,8 @@ public class VoucherClientConfig {
 
     private String privateKeyHex;
 
-    private int keyIndex;
+    @Default
+    private int keyIndex = 0;
 
     private String adminAccountAddress;
 
