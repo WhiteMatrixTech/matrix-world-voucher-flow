@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"google.golang.org/grpc"
+
+	"go/common"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
-	"go/common"
 )
 
 var mintNFT string = fmt.Sprintf(`
@@ -33,6 +35,7 @@ transaction(recipient: Address, name: String, description: String, animationUrl:
 }`, common.Config.FungibleTokenAddress, common.Config.NonFungibleTokenAddress, common.Config.ContractName, common.Config.ContractAddress, common.Config.ContractName, common.Config.ContractName, common.Config.ContractName, common.Config.ContractName)
 
 func main() {
+    recipient := os.Args[1]
 	fmt.Println(common.Config.Node) // Ahoy, world!
 	ctx := context.Background()
 	flowClient, err := client.New(common.Config.Node, grpc.WithInsecure())
@@ -55,7 +58,7 @@ func main() {
 		SetPayer(acctAddress).
 		AddAuthorizer(acctAddress)
 
-	if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(common.Config.SingerAddress))); err != nil {
+	if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(recipient))); err != nil {
 		panic(err)
 	}
 
