@@ -6,6 +6,7 @@ import {getFLOWBalanceScript} from "../cadence/get_flow_balance";
 import {getFUSDBalanceScript} from "../cadence/get_fusd_balance";
 import {transferFLOWScript} from "../cadence/transfer_flow";
 import {transferFUSDScript} from "../cadence/transfer_fusd";
+import {getUsedStorageScript} from "../cadence/get_used_storage";
 
 export enum FlowEnv {
     localEmulator,
@@ -21,6 +22,12 @@ export interface VoucherClient {
     FLOWBalance(address: string): Promise<number>;
     checkVoucherCollection(address: string): Promise<boolean>;
     initVoucherCollection(): Promise<string>;
+    checkCapacity(
+        address: string,
+        currentBalance: number,
+        paymentAmount: number,
+        numberOfVouchers: number
+    ): Promise<void>;
 }
 
 export class FclVoucherClient implements VoucherClient {
@@ -170,7 +177,6 @@ export class FclVoucherClient implements VoucherClient {
         }
     }
 
-
     public async checkVoucherCollection(address: string): Promise<boolean> {
         try {
             const response = await fcl.send([
@@ -202,6 +208,52 @@ export class FclVoucherClient implements VoucherClient {
         } catch (error) {
             console.error(error);
             return Promise.reject("Something is wrong with this transaction");
+        }
+    }
+
+    /**
+     * Pre-check user storage capabilities
+     *
+     * @async
+     * @param {string} address - userAddress
+     * @param {number} currentBalance - userCurrentFlowBalance
+     * @param {number} paymentAmount - amount Of Flow user to pay
+     * @param {number} numberOfVouchers - number of vouchers user to mint
+     * @returns {Promise<void>}
+     */
+    public async checkCapacity(
+        address: string,
+        currentBalance: number,
+        paymentAmount: number,
+        numberOfVouchers: number
+    ): Promise<void> {
+        try {
+            const expectLeftBalance = currentBalance - paymentAmount;
+            if (expectLeftBalance < 0.001) {
+                return Promise.reject("Please may sure you have > 0.001 FLOW balance after payment");
+            }
+            console.log("expect balance", expectLeftBalance);
+
+            const usedBytes = await fcl.decode(await fcl.send([
+                getUsedStorageScript,
+                fcl.args([fcl.arg(address, t.Address)]),
+                fcl.limit(1000)
+            ]));
+
+            console.log("used bytes", usedBytes);
+
+            const thresholdInBytes = expectLeftBalance * 1e8 - usedBytes - numberOfVouchers * 500;
+
+            console.log("thresholdInBytes", thresholdInBytes);
+
+            if (thresholdInBytes < 100) {
+                return Promise.reject(
+                    "Please reserve more FLOW in your wallet, it seems like will run out of storage and likely cause a failed mint"
+                );
+            }
+        } catch (error) {
+            console.error(error);
+            return Promise.reject("Something is wrong with checking Voucher Collection");
         }
     }
 }

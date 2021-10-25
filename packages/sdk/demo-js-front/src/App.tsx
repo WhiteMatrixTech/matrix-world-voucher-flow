@@ -28,25 +28,48 @@ function App() {
     console.log(ret);
 
     // transferFUSD
-    console.log("FUSD test");
-    ret = await client.FUSDBalance(user.addr);
-    console.log(ret);
-
-    ret = await client.FUSDBalance("0x01cf0e2f2f715450");
-    console.log(ret);
-
-    ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
-    console.log(ret);
-
-    ret = await client.FUSDBalance(user.addr);
-    console.log(ret);
-
-    ret = await client.FUSDBalance("0x01cf0e2f2f715450");
-    console.log(ret);
+    // console.log("FUSD test");
+    // ret = await client.FUSDBalance(user.addr);
+    // console.log(ret);
+    //
+    // ret = await client.FUSDBalance("0x01cf0e2f2f715450");
+    // console.log(ret);
+    //
+    // ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
+    // console.log(ret);
+    //
+    // ret = await client.FUSDBalance(user.addr);
+    // console.log(ret);
+    //
+    // ret = await client.FUSDBalance("0x01cf0e2f2f715450");
+    // console.log(ret);
 
     console.log("FLOW test");
     ret = await client.FLOWBalance(user.addr);
     console.log(ret);
+
+    console.log("check capacity");
+    try {
+        await client.checkCapacity(user.addr, ret, 1000, 50);
+    } catch (error) {
+        console.log(error);
+        // no error
+    }
+
+    try {
+        await client.checkCapacity(user.addr, ret, ret-0.0009, 50);
+    } catch (error) {
+        console.log(error);
+        // Please may sure you have > 0.001 FLOW balance after payment
+    }
+
+    try {
+        await client.checkCapacity(user.addr, ret, ret-0.002, 50000);
+    } catch (error) {
+        console.log(error);
+        // Please reserve more FLOW in your wallet, it seems like will run out of storage and likely cause a failed mint
+    }
+
     ret = await client.FLOWBalance("0x01cf0e2f2f715450");
     console.log(ret);
 

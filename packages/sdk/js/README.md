@@ -101,7 +101,52 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
     const user = await fcl.currentUser().snapshot();
     ret = await client.initVoucherCollection();
     console.log(ret);
+    ```
 
+    make sure use has enough reserved FLOW for storage to hold minted Vouchers
+    ```typescript
+    const user = await fcl.currentUser().snapshot();
+    /**
+     * Pre-check user storage capabilities
+     *
+     * @async
+     * @param {string} address - userAddress
+     * @param {number} currentBalance - userCurrentFlowBalance
+     * @param {number} paymentAmount - amount Of Flow user to pay
+     * @param {number} numberOfVouchers - number of vouchers user to mint
+     * @returns {Promise<void>}
+     */
+    public async checkCapacity(
+        address: string,
+        currentBalance: number,
+        paymentAmount: number,
+        numberOfVouchers: number
+    ): Promise<void>;
+
+    // e.g.
+    const ret = await client.FLOWBalance(user.addr);
+    console.log(ret);
+    console.log("check capacity");
+    try {
+        await client.checkCapacity(user.addr, ret, 1000, 50);
+    } catch (error) {
+        console.log(error);
+        // no error
+    }
+
+    try {
+        await client.checkCapacity(user.addr, ret, ret-0.0009, 50);
+    } catch (error) {
+        console.log(error);
+        // Please may sure you have > 0.001 FLOW balance after payment
+    }
+
+    try {
+        await client.checkCapacity(user.addr, ret, ret-0.002, 50000);
+    } catch (error) {
+        console.log(error);
+        // Please reserve more FLOW in your wallet, it seems like will run out of storage and likely cause a failed mint
+    }
     ```
 
     sample code for sending FLOW
