@@ -11,31 +11,50 @@ function App() {
   const client = new FclVoucherClient();
   const check = async () => {
     await client.setupGlobalFcl(FlowEnv.localEmulator);
+    // await client.setupGlobalFcl(FlowEnv.flowTestnet);
     await fcl.logIn();
     await fcl.authenticate();
   };
   check();
 
   const transfer = async () => {
+    let ret;
+    const user = await fcl.currentUser().snapshot();
+    console.log(user)
+    ret = await client.checkVoucherCollection(user.addr);
+    console.log(ret);
+
+    ret = await client.initVoucherCollection();
+    console.log(ret);
+
     // transferFUSD
     console.log("FUSD test");
-    let ret;
+    ret = await client.FUSDBalance(user.addr);
+    console.log(ret);
+
     ret = await client.FUSDBalance("0x01cf0e2f2f715450");
     console.log(ret);
 
     ret = await client.transferFUSD("0x01cf0e2f2f715450", "10.0");
     console.log(ret);
 
+    ret = await client.FUSDBalance(user.addr);
+    console.log(ret);
+
     ret = await client.FUSDBalance("0x01cf0e2f2f715450");
     console.log(ret);
 
     console.log("FLOW test");
+    ret = await client.FLOWBalance(user.addr);
+    console.log(ret);
     ret = await client.FLOWBalance("0x01cf0e2f2f715450");
     console.log(ret);
 
     ret = await client.transferFLOW("0x01cf0e2f2f715450", "11.1");
     console.log(ret);
 
+    ret = await client.FLOWBalance(user.addr);
+    console.log(ret);
     ret = await client.FLOWBalance("0x01cf0e2f2f715450");
     console.log(ret);
   };
