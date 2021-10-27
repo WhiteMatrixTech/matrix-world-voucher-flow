@@ -102,7 +102,7 @@ export class FclVoucherClient implements VoucherClient {
             return response.transactionId;
         } catch (error) {
             console.error(error);
-            return Promise.reject("Something is wrong with this transaction");
+            return Promise.reject(error);
         }
     }
 
@@ -152,7 +152,7 @@ export class FclVoucherClient implements VoucherClient {
             return response.transactionId;
         } catch (error) {
             console.error(error);
-            return Promise.reject("Something is wrong with this transaction");
+            return Promise.reject(error);
         }
     }
 
@@ -187,7 +187,7 @@ export class FclVoucherClient implements VoucherClient {
             return fcl.decode(response);
         } catch (error) {
             console.error(error);
-            return Promise.reject("Something is wrong with checking Voucher Collection");
+            return Promise.reject(error);
         }
     }
 
@@ -207,7 +207,7 @@ export class FclVoucherClient implements VoucherClient {
             return response.transactionId;
         } catch (error) {
             console.error(error);
-            return Promise.reject("Something is wrong with this transaction");
+            return Promise.reject(error);
         }
     }
 
