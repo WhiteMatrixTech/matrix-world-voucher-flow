@@ -7,6 +7,7 @@ import {getFUSDBalanceScript} from "../cadence/get_fusd_balance";
 import {transferFLOWScript} from "../cadence/transfer_flow";
 import {transferFUSDScript} from "../cadence/transfer_fusd";
 import {getUsedStorageScript} from "../cadence/get_used_storage";
+import {transferVoucherScript} from "../cadence/transfer_voucher";
 
 export enum FlowEnv {
     localEmulator,
@@ -212,6 +213,36 @@ export class FclVoucherClient implements VoucherClient {
     }
 
     /**
+     * Transfer voucher to other account
+     *
+     * @async
+     * @param {string} recipient - recipient address
+     * @param {number} tokenId - tokenId
+     * @returns {Promise<string>} transaction id
+     * @example ret = await client.transferVoucher("0x01cf0e2f2f715450", 0);
+     */
+    public async transferVoucher(recipient: string, tokenId: number): Promise<string> {
+        try {
+            const response = await fcl.send([
+                transferVoucherScript,
+                fcl.args([fcl.arg(recipient, t.Address), fcl.arg(tokenId, t.UInt64)]),
+                fcl.proposer(fcl.currentUser().authorization),
+                fcl.authorizations([fcl.currentUser().authorization]),
+                fcl.limit(2000),
+                fcl.payer(fcl.currentUser().authorization)
+            ]);
+            const ret = await fcl.tx(response).onceSealed();
+            if (ret.errorMessage !== "" && ret.status != 4) {
+                return Promise.reject(ret.errorMessage);
+            }
+            return response.transactionId;
+        } catch (error) {
+            console.error(error);
+            return Promise.reject(error);
+        }
+    }
+
+    /**
      * Pre-check user storage capabilities
      *
      * @async
@@ -234,11 +265,9 @@ export class FclVoucherClient implements VoucherClient {
             }
             console.log("expect balance", expectLeftBalance);
 
-            const usedBytes = await fcl.decode(await fcl.send([
-                getUsedStorageScript,
-                fcl.args([fcl.arg(address, t.Address)]),
-                fcl.limit(1000)
-            ]));
+            const usedBytes = await fcl.decode(
+                await fcl.send([getUsedStorageScript, fcl.args([fcl.arg(address, t.Address)]), fcl.limit(1000)])
+            );
 
             console.log("used bytes", usedBytes);
 
