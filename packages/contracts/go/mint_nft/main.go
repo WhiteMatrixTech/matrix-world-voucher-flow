@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 
@@ -35,7 +36,27 @@ transaction(recipient: Address, name: String, description: String, animationUrl:
 }`, common.Config.FungibleTokenAddress, common.Config.NonFungibleTokenAddress, common.Config.ContractName, common.Config.ContractAddress, common.Config.ContractName, common.Config.ContractName, common.Config.ContractName, common.Config.ContractName)
 
 func main() {
-    recipient := os.Args[1]
+    // get recipientAddress from flag
+    recipient := flag.String("recipient", "", "The address of the recipient")
+
+    // get landInfoHashString from flag
+    landInfoHashString := flag.String("landInfoHashString", "", "The landInfoHashString of the land")
+
+    // parse flags
+    flag.Parse()
+
+    // check if recipient is set
+    if *recipient == "" {
+        fmt.Println("Please set the recipient address with -recipient")
+        os.Exit(1)
+    }
+
+    // check if landInfoHashString is set
+    if *landInfoHashString == "" {
+        fmt.Println("Please set the landInfoHashString with -landInfoHashString")
+        os.Exit(1)
+    }
+
 	fmt.Println(common.Config.Node) // Ahoy, world!
 	ctx := context.Background()
 	flowClient, err := client.New(common.Config.Node, grpc.WithInsecure())
@@ -58,7 +79,7 @@ func main() {
 		SetPayer(acctAddress).
 		AddAuthorizer(acctAddress)
 
-	if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(recipient))); err != nil {
+	if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(*recipient))); err != nil {
 		panic(err)
 	}
 
@@ -77,7 +98,7 @@ func main() {
 		panic(err)
 	}
 
-	hash, _ := cadence.NewString("Example Hash")
+	hash, _ := cadence.NewString(*landInfoHashString)
 	if err := tx.AddArgument(hash); err != nil {
 		panic(err)
 	}

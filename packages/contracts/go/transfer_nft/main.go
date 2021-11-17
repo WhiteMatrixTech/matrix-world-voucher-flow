@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"go/common"
-	"math"
 	"os"
 
 	"github.com/onflow/cadence"
@@ -46,20 +46,18 @@ transaction(recipient: Address, tokenIds: [UInt64]) {
 }`)
 
 func main() {
-	receiverAddress := os.Args[1]
-	fromTokenId, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		// handle error
-		fmt.Println(err)
-		os.Exit(2)
+	receiverAddress := flag.String("receiver", "", "receiver address")
+	tokenId := flag.String("tokenId", "", "tokenId")
+	flag.Parse()
+
+	if *receiverAddress == "" {
+		fmt.Println("receiver address is required")
+		os.Exit(1)
 	}
-	toTokenId, err := strconv.Atoi(os.Args[3])
-	if err != nil {
-		// handle error
-		fmt.Println(err)
-		os.Exit(2)
+	if *tokenId == "" {
+		fmt.Println("tokenId is required")
+		os.Exit(1)
 	}
-	batchSize := 500
 
 	transferNFT = strings.ReplaceAll(transferNFT, "0xFUNGIBLE_TOKEN_ADDRESS", "0x"+common.Config.FungibleTokenAddress)
 	transferNFT = strings.ReplaceAll(transferNFT, "0xNONFUNGIBLE_TOKEN_ADDRESS", "0x"+common.Config.NonFungibleTokenAddress)
@@ -75,57 +73,54 @@ func main() {
 
 	acctAddress, acctKey, signer := common.ServiceAccount(flowClient, common.Config.SingerAddress, common.Config.SingerPriv)
 
-	totalNumTokens := toTokenId - fromTokenId
-    fmt.Println("totalNumTokens:", totalNumTokens)
+	tokenIds := make([]cadence.Value, 0)
 
-	for i := 0; i < totalNumTokens; i += batchSize {
-		tokenIds := make([]cadence.Value, 0)
-
-		for j := i; j < int(math.Min(float64(i+batchSize), float64(totalNumTokens))); j++ {
-			tokenId := cadence.UInt64(uint64(fromTokenId + j))
-			tokenIds = append(tokenIds, tokenId)
-		}
-
-		referenceBlock, err := flowClient.GetLatestBlock(ctx, false)
-		if err != nil {
-			panic(err)
-		}
-
-		proposalAccount, err := flowClient.GetAccountAtLatestBlock(ctx, acctAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		tx := flow.NewTransaction().
-			SetScript([]byte(transferNFT)).
-			SetGasLimit(9999).
-			SetProposalKey(acctAddress, acctKey.Index, proposalAccount.Keys[acctKey.Index].SequenceNumber).
-			SetReferenceBlockID(referenceBlock.ID).
-			SetPayer(acctAddress).
-			AddAuthorizer(acctAddress)
-
-		if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(receiverAddress))); err != nil {
-			panic(err)
-		}
-
-		tokenIdsC := cadence.NewArray(tokenIds)
-		if err := tx.AddArgument(tokenIdsC); err != nil {
-			panic(err)
-		}
-
-		if err := tx.SignEnvelope(acctAddress, acctKey.Index, signer); err != nil {
-			panic(err)
-		}
-
-		if err := flowClient.SendTransaction(ctx, *tx); err != nil {
-			panic(err)
-		}
-		fmt.Println("send tx.ID().String() ---- ", tx.ID().String())
-		result := common.WaitForSeal(ctx, flowClient, tx.ID())
-		fmt.Println("Transaction complete!")
-		if result == nil || result.Error != nil {
-			panic("Something is wrong with")
-		}
-		fmt.Println("Finish", tokenIds)
+	// convert tokenId to UInt64
+	tokenIdUInt64, err := strconv.Atoi(*tokenId)
+	if err != nil {
+		panic(err)
 	}
+	tokenIds = append(tokenIds, cadence.UInt64(uint64(tokenIdUInt64)))
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, false)
+	if err != nil {
+		panic(err)
+	}
+
+	proposalAccount, err := flowClient.GetAccountAtLatestBlock(ctx, acctAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	tx := flow.NewTransaction().
+		SetScript([]byte(transferNFT)).
+		SetGasLimit(9999).
+		SetProposalKey(acctAddress, acctKey.Index, proposalAccount.Keys[acctKey.Index].SequenceNumber).
+		SetReferenceBlockID(referenceBlock.ID).
+		SetPayer(acctAddress).
+		AddAuthorizer(acctAddress)
+
+	if err := tx.AddArgument(cadence.NewAddress(flow.HexToAddress(*receiverAddress))); err != nil {
+		panic(err)
+	}
+
+	tokenIdsC := cadence.NewArray(tokenIds)
+	if err := tx.AddArgument(tokenIdsC); err != nil {
+		panic(err)
+	}
+
+	if err := tx.SignEnvelope(acctAddress, acctKey.Index, signer); err != nil {
+		panic(err)
+	}
+
+	if err := flowClient.SendTransaction(ctx, *tx); err != nil {
+		panic(err)
+	}
+	fmt.Println("send tx.ID().String() ---- ", tx.ID().String())
+	result := common.WaitForSeal(ctx, flowClient, tx.ID())
+	fmt.Println("Transaction complete!")
+	if result == nil || result.Error != nil {
+		panic("Something is wrong with")
+	}
+	fmt.Println("Finish", tokenIds)
 }
