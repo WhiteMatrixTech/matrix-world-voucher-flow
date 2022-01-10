@@ -10,8 +10,8 @@ import {
 function App() {
   const client = new FclVoucherClient();
   const check = async () => {
-    await client.setupGlobalFcl(FlowEnv.localEmulator);
-    // await client.setupGlobalFcl(FlowEnv.flowTestnet);
+    // await client.setupGlobalFcl(FlowEnv.localEmulator);
+    await client.setupGlobalFcl(FlowEnv.flowTestnet);
     await fcl.logIn();
     await fcl.authenticate();
   };
@@ -21,14 +21,21 @@ function App() {
     let ret;
     const user = await fcl.currentUser().snapshot();
     console.log(user)
-    ret = await client.checkVoucherCollection(user.addr);
+
+    ret = await client.checkAssetsCollection(user.addr);
     console.log(ret);
 
-    ret = await client.initVoucherCollection();
+    ret = await client.initAssetsCollection();
     console.log(ret);
 
-    ret = await client.transferVoucher("0x01cf0e2f2f715450", 0);
-    console.log(ret);
+    // ret = await client.checkVoucherCollection(user.addr);
+    // console.log(ret);
+    //
+    // ret = await client.initVoucherCollection();
+    // console.log(ret);
+
+    // ret = await client.transferVoucher("0x01cf0e2f2f715450", 0);
+    // console.log(ret);
 
     // transferFUSD
     // console.log("FUSD test");

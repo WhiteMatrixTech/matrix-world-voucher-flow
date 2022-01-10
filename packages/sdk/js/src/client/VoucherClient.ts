@@ -8,6 +8,8 @@ import {transferFLOWScript} from "../cadence/transfer_flow";
 import {transferFUSDScript} from "../cadence/transfer_fusd";
 import {getUsedStorageScript} from "../cadence/get_used_storage";
 import {transferVoucherScript} from "../cadence/transfer_voucher";
+import {checkAssetsCollection} from "../cadence/check_assets_collection";
+import {initAssetsCollection} from "../cadence/init_assets_collection";
 
 export enum FlowEnv {
     localEmulator,
@@ -22,7 +24,9 @@ export interface VoucherClient {
     transferFLOW(to: string, amount: string): Promise<string>;
     FLOWBalance(address: string): Promise<number>;
     checkVoucherCollection(address: string): Promise<boolean>;
+    checkAssetsCollection(address: string): Promise<boolean>;
     initVoucherCollection(): Promise<string>;
+    initAssetsCollection(): Promise<string>;
     checkCapacity(
         address: string,
         currentBalance: number,
@@ -49,6 +53,7 @@ export class FclVoucherClient implements VoucherClient {
                     .put("0xFUSD_ADDRESS", "0xe223d8a629e49c68")
                     .put("0xFLOW_TOKEN_ADDRESS", "0x7e60df042a9c0868")
                     .put("0xVOUCHER_ADDRESS", "0xe2f1b000e0203c1d")
+                    .put("0xASSETS_ADDRESS", "0x95702b3642af3d0c")
                     .put("0xNON_FUNGIBLE_TOKEN_ADDRESS", "0x631e88ae7f1d7c20");
                 break;
             }
@@ -61,6 +66,7 @@ export class FclVoucherClient implements VoucherClient {
                     .put("0xFUSD_ADDRESS", "0x3c5959b568896393")
                     .put("0xFLOW_TOKEN_ADDRESS", "0x1654653399040a61")
                     .put("0xVOUCHER_ADDRESS", "0x0d77ec47bbad8ef6")
+                    .put("0xASSETS_ADDRESS", "")
                     .put("0xNON_FUNGIBLE_TOKEN_ADDRESS", "0x1d7e57aa55817448");
                 break;
             }
@@ -74,6 +80,7 @@ export class FclVoucherClient implements VoucherClient {
                     .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7")
                     .put("0xFLOW_TOKEN_ADDRESS", "0x0ae53cb6e3f42a79")
                     .put("0xVOUCHER_ADDRESS", "0x01cf0e2f2f715450")
+                    .put("0xASSETS_ADDRESS", "")
                     .put("0xNON_FUNGIBLE_TOKEN_ADDRESS", "0xf8d6e0586b0a20c7");
         }
     }
@@ -192,10 +199,44 @@ export class FclVoucherClient implements VoucherClient {
         }
     }
 
+    public async checkAssetsCollection(address: string): Promise<boolean> {
+        try {
+            const response = await fcl.send([
+                checkAssetsCollection,
+                fcl.args([fcl.arg(address, t.Address)]),
+                fcl.limit(1000)
+            ]);
+            return fcl.decode(response);
+        } catch (error) {
+            console.error(error);
+            return Promise.reject(error);
+        }
+    }
+
     public async initVoucherCollection(): Promise<string> {
         try {
             const response = await fcl.send([
                 initVoucherCollection,
+                fcl.proposer(fcl.currentUser().authorization),
+                fcl.authorizations([fcl.currentUser().authorization]),
+                fcl.limit(1000),
+                fcl.payer(fcl.currentUser().authorization)
+            ]);
+            const ret = await fcl.tx(response).onceSealed();
+            if (ret.errorMessage !== "" && ret.status != 4) {
+                return Promise.reject(ret.errorMessage);
+            }
+            return response.transactionId;
+        } catch (error) {
+            console.error(error);
+            return Promise.reject(error);
+        }
+    }
+
+    public async initAssetsCollection(): Promise<string> {
+        try {
+            const response = await fcl.send([
+                initAssetsCollection,
                 fcl.proposer(fcl.currentUser().authorization),
                 fcl.authorizations([fcl.currentUser().authorization]),
                 fcl.limit(1000),
