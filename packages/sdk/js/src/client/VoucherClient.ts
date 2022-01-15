@@ -66,7 +66,7 @@ export class FclVoucherClient implements VoucherClient {
                     .put("0xFUSD_ADDRESS", "0x3c5959b568896393")
                     .put("0xFLOW_TOKEN_ADDRESS", "0x1654653399040a61")
                     .put("0xVOUCHER_ADDRESS", "0x0d77ec47bbad8ef6")
-                    .put("0xASSETS_ADDRESS", "")
+                    .put("0xASSETS_ADDRESS", "0xf20df769e658c257")
                     .put("0xNON_FUNGIBLE_TOKEN_ADDRESS", "0x1d7e57aa55817448");
                 break;
             }
