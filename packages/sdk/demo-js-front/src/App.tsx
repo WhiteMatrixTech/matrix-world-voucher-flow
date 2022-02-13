@@ -23,8 +23,12 @@ function App() {
     const user = await fcl.currentUser().snapshot();
     console.log(user)
 
-    ret = await client.checkAssetsCollection(user.addr);
+    // check assets (mainnet)
+    ret = await client.getAssets("0xf20df769e658c257");
     console.log(ret);
+
+    // ret = await client.checkAssetsCollection(user.addr);
+    // console.log(ret);
 
     // ret = await client.initAssetsCollection();
     // console.log(ret);
