@@ -10,6 +10,9 @@ import {getUsedStorageScript} from "../cadence/get_used_storage";
 import {transferVoucherScript} from "../cadence/transfer_voucher";
 import {checkAssetsCollection} from "../cadence/check_assets_collection";
 import {initAssetsCollection} from "../cadence/init_assets_collection";
+import {transferAssetsScript} from "../cadence/transfer_assets";
+import {getAssetsScript} from "../cadence/get_assets";
+import {Assets} from "./model";
 
 export enum FlowEnv {
     localEmulator,
@@ -277,6 +280,56 @@ export class FclVoucherClient implements VoucherClient {
                 return Promise.reject(ret.errorMessage);
             }
             return response.transactionId;
+        } catch (error) {
+            console.error(error);
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Transfer assets to other account
+     *
+     * @async
+     * @param {string} recipient - recipient address
+     * @param {number} tokenId - tokenId
+     * @returns {Promise<string>} transaction id
+     * @example ret = await client.transferVoucher("0x01cf0e2f2f715450", 0);
+     */
+    public async transferAssets(recipient: string, tokenId: number): Promise<string> {
+        try {
+            const response = await fcl.send([
+                transferAssetsScript,
+                fcl.args([fcl.arg(recipient, t.Address), fcl.arg(tokenId, t.UInt64)]),
+                fcl.limit(2000)
+            ]);
+            const ret = await fcl.tx(response).onceSealed();
+            if (ret.errorMessage !== "" && ret.status != 4) {
+                return Promise.reject(ret.errorMessage);
+            }
+            return response.transactionId;
+        } catch (error) {
+            console.error(error);
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Get all assets from given account
+     *
+     * @async
+     * @param {string} recipient - recipient address
+     * @returns {Promise<Assets[]>} transaction id
+     * @example ret = await client.getAssets("0x01cf0e2f2f715450");
+     */
+    public async getAssets(account: string): Promise<Assets[]> {
+        try {
+            const response = await fcl.send([
+                getAssetsScript,
+                fcl.args([fcl.arg(account, t.Address)]),
+                fcl.limit(2000)
+            ]);
+            console.log(response);
+            return fcl.decode(response);
         } catch (error) {
             console.error(error);
             return Promise.reject(error);
