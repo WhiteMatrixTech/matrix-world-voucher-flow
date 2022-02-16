@@ -10,7 +10,9 @@ pub fun main(address: Address): [{String: String}]{
     let ret : [{String: String}] = []
     let ids = collection.getIDs()
     for tokenId in ids {
-        ret.append(collection.getMetadata(id: tokenId))
+        let tokenInfo = collection.getMetadata(id: tokenId)
+        tokenInfo["tokenId"] = tokenId.toString()
+        ret.append(tokenInfo)
     }
     return ret
 }`;

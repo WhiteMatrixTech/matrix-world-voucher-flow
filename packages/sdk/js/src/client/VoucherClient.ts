@@ -12,7 +12,7 @@ import {checkAssetsCollection} from "../cadence/check_assets_collection";
 import {initAssetsCollection} from "../cadence/init_assets_collection";
 import {transferAssetsScript} from "../cadence/transfer_assets";
 import {getAssetsScript} from "../cadence/get_assets";
-import {Assets} from "./model";
+import {Asset} from "./model";
 
 export enum FlowEnv {
     localEmulator,
@@ -300,7 +300,10 @@ export class FclVoucherClient implements VoucherClient {
             const response = await fcl.send([
                 transferAssetsScript,
                 fcl.args([fcl.arg(recipient, t.Address), fcl.arg(tokenId, t.UInt64)]),
-                fcl.limit(2000)
+                fcl.proposer(fcl.currentUser().authorization),
+                fcl.authorizations([fcl.currentUser().authorization]),
+                fcl.limit(2000),
+                fcl.payer(fcl.currentUser().authorization)
             ]);
             const ret = await fcl.tx(response).onceSealed();
             if (ret.errorMessage !== "" && ret.status != 4) {
@@ -318,10 +321,10 @@ export class FclVoucherClient implements VoucherClient {
      *
      * @async
      * @param {string} recipient - recipient address
-     * @returns {Promise<Assets[]>} transaction id
+     * @returns {Promise<Asset[]>} transaction id
      * @example ret = await client.getAssets("0x01cf0e2f2f715450");
      */
-    public async getAssets(account: string): Promise<Assets[]> {
+    public async getAssets(account: string): Promise<Asset[]> {
         try {
             const response = await fcl.send([
                 getAssetsScript,

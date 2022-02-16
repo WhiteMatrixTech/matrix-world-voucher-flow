@@ -11,8 +11,8 @@ function App() {
   const client = new FclVoucherClient();
   const check = async () => {
     // await client.setupGlobalFcl(FlowEnv.localEmulator);
-    // await client.setupGlobalFcl(FlowEnv.flowTestnet);
-    await client.setupGlobalFcl(FlowEnv.flowMainnet);
+    // await client.setupGlobalFcl(FlowEnv.flowMainnet);
+    await client.setupGlobalFcl(FlowEnv.flowTestnet);
     await fcl.logIn();
     await fcl.authenticate();
   };
@@ -21,10 +21,16 @@ function App() {
   const transfer = async () => {
     let ret;
     const user = await fcl.currentUser().snapshot();
-    console.log(user)
+    console.log(user);
 
     // check assets (mainnet)
-    ret = await client.getAssets("0xf20df769e658c257");
+    ret = await client.getAssets("0xed2a0254c4130116");
+    console.log(ret);
+
+    ret = await client.transferAssets("0xa0860f23c7dfcc99", 354);
+    console.log(ret);
+
+    ret = await client.getAssets("0xed2a0254c4130116");
     console.log(ret);
 
     // ret = await client.checkAssetsCollection(user.addr);
