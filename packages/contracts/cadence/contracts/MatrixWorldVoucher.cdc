@@ -88,12 +88,12 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
         }
 
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+            return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
         }
 
         pub fun borrowVoucher(id: UInt64): &MatrixWorldVoucher.NFT? {
             if self.ownedNFTs[id] != nil {
-                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
                 return ref as! &MatrixWorldVoucher.NFT
             } else {
                 return nil
@@ -140,7 +140,7 @@ pub contract MatrixWorldVoucher: NonFungibleToken {
             recipient: &{NonFungibleToken.CollectionPublic},
             name: String,
             description: String,
-            animationUrl: String
+            animationUrl: String,
             hash: String,
             type: String) {
             emit Minted(id: MatrixWorldVoucher.totalSupply, name: name, description: description, animationUrl: animationUrl, hash: hash, type: type)
