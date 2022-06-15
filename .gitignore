@@ -11,3 +11,4 @@ packages/sdk/java/voucher-sdk/target
 packages/sdk/js/tsconfig.tsbuildinfo
 packages/contracts/pages/MAINNET_TEST_POC.md
 packages/contracts/flow.mainnet.json
+packages/contracts/flow.main.json
