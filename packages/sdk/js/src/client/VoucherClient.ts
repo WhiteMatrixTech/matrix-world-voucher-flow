@@ -51,6 +51,7 @@ export class FclVoucherClient implements VoucherClient {
                 await fcl
                     .config()
                     .put("accessNode.api", "https://access-testnet.onflow.org") // connect to Flow testnet
+                    .put("discovery.wallet.method", "POP/RPC")
                     .put("challenge.handshake", "https://flow-wallet-testnet.blocto.app/authn") // use Blocto testnet wallet
                     .put("0xFUNGIBLE_TOKEN_ADDRESS", "0x9a0766d93b6608b7")
                     .put("0xFUSD_ADDRESS", "0xe223d8a629e49c68")
@@ -78,6 +79,7 @@ export class FclVoucherClient implements VoucherClient {
                 await fcl
                     .config()
                     .put("accessNode.api", "http://localhost:8080")
+                    .put("discovery.wallet.method", "POP/RPC")
                     .put("discovery.wallet", "http://localhost:8701/fcl/authn")
                     .put("0xFUNGIBLE_TOKEN_ADDRESS", "0xee82856bf20e2aa6")
                     .put("0xFUSD_ADDRESS", "0xf8d6e0586b0a20c7")
