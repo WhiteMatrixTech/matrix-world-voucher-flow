@@ -30,3 +30,7 @@ bootstrap-local:
 	bash ./sh/bootstrop.sh
 .PHONY: bootstrap-local
 
+upgrade-to-main:
+	flow accounts update-contract MatrixWorldVoucher ./cadence/contracts/MatrixWorldVoucherUpgradeMain.cdc --signer main -f ./flow.json -f ./flow.main.json -n mainnet
+.PHONY: upgrade-to-main
+

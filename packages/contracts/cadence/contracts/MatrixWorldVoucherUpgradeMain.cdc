@@ -1,4 +1,4 @@
-import NonFungibleToken from "./lib/NonFungibleToken.cdc"
+import NonFungibleToken from 0x1d7e57aa55817448
 
 pub contract MatrixWorldVoucher: NonFungibleToken {
     pub event ContractInitialized()
