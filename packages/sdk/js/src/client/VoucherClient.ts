@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 import * as t from "@onflow/types";
 import {checkVoucherCollection} from "../cadence/check_voucher_collection";
 import {initVoucherCollection} from "../cadence/init_voucher_collection";

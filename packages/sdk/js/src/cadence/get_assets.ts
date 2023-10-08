@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 
 export const getAssetsScript: string = fcl.script`
 import NonFungibleToken from 0xNON_FUNGIBLE_TOKEN_ADDRESS

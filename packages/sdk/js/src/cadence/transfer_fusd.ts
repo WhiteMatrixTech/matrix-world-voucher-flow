@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 
 export const transferFUSDScript: string = fcl.transaction`
 import FungibleToken from 0xFUNGIBLE_TOKEN_ADDRESS

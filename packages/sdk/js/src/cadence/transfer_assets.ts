@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 
 export const transferAssetsScript: string = fcl.transaction`
 import NonFungibleToken from 0xNON_FUNGIBLE_TOKEN_ADDRESS
@@ -14,7 +14,7 @@ transaction(recipient: Address, tokenId: UInt64) {
     }
 
     execute {
-        
+
         // transfer token
         let token <- self.senderCollection.withdraw(withdrawID: tokenId)
         let receiverProvider = getAccount(recipient).getCapability<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>(MatrixWorldAssetsNFT.collectionPublicPath)

@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 
 export const getFUSDBalanceScript: string = fcl.script`
 import FungibleToken from 0xFUNGIBLE_TOKEN_ADDRESS

@@ -1,6 +1,6 @@
 {
   "name": "@white-matrix/matrix-world-voucher-flow-js-sdk",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -35,6 +35,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@blocto/fcl": "^1.4.0",
     "@onflow/fcl": "^0.0.77",
     "@onflow/types": "^0.0.5"
   },

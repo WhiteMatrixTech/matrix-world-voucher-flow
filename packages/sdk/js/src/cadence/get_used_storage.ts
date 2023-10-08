@@ -1,4 +1,4 @@
-import * as fcl from "@onflow/fcl";
+import * as fcl from "@blocto/fcl";
 
 export const getUsedStorageScript: string = fcl.script`
 pub fun main(address: Address): UInt64 {

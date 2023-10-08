@@ -1,2 +1,2 @@
 export * from "./client/VoucherClient";
-export * as fcl from "@onflow/fcl"
+export * as fcl from "@blocto/fcl"
